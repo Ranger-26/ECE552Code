@@ -19,7 +19,8 @@ module control_unit (
 
 
 assign halted = (instruction[6:0] == 7'b1110011); // ebreak
-assign is_jal_r = (instruction[6:0] == 7'1100111) //jalr
+assign is_jal_r = (instruction[6:0] == 7'b1100111); //jalr
+
 
 
 endmodule

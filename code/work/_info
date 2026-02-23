@@ -1,0 +1,389 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project2
+valu
+Z0 !s110 1771831710
+!i10b 1
+!s100 5hl[OoKiFFYNR:OaiMWka3
+Z1 !s11b Dg1SIo80bB@j0V0VzS_@n1
+ID@L4kCY;z>b43JY;J0;NF1
+Z2 VDg1SIo80bB@j0V0VzS_@n1
+Z3 dC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code
+w1771813994
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/alu.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/alu.v
+!i122 53
+L0 8 103
+Z4 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z5 !s108 1771831710.000000
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/alu.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/alu.v|
+!i113 1
+Z6 o-work work
+Z7 tCvgOpt 0
+valu_shift_right_tb
+Z8 DXx6 sv_std 3 std 0 22 VYECXdT12H8WgbUP_5Y6:3
+Z9 !s110 1771831712
+!i10b 1
+!s100 g;^_cgJmc<ON;YLCnXOz93
+R1
+I4Xz_Kb>MW^b@JH4lRaHOA3
+R2
+S1
+R3
+Z10 w1770910127
+Z11 8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/alu_tb.sv
+Z12 FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/alu_tb.sv
+!i122 63
+L0 395 126
+R4
+r1
+!s85 0
+31
+Z13 !s108 1771831712.000000
+Z14 !s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/alu_tb.sv|
+Z15 !s90 -reportprogress|300|-work|work|-sv|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/alu_tb.sv|
+!i113 1
+Z16 o-work work -sv
+R7
+valu_sll_tb
+R8
+R9
+!i10b 1
+!s100 9^aHXj;kD?Je1^_`eJhn40
+R1
+IBL`2i`IU1D=bRl?4dl^fZ1
+R2
+S1
+R3
+R10
+R11
+R12
+!i122 63
+L0 289 103
+R4
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 1
+R16
+R7
+vcontrol_unit
+R0
+!i10b 1
+!s100 1;^>7idzkKL;MRG?NKKX80
+R1
+I6^c8OY2`GjHQ2:A_^:^[P0
+R2
+R3
+w1771831706
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/control_unit.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/control_unit.v
+!i122 54
+L0 1 25
+R4
+r1
+!s85 0
+31
+R5
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/control_unit.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/control_unit.v|
+!i113 1
+R6
+R7
+vdecode
+Z17 !s110 1771831711
+!i10b 1
+!s100 :PlMSCFS?1_?QIj:eEfLZ0
+R1
+I5m2]k0d73EzTkAc>jj=ih3
+R2
+R3
+w1771831320
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/decode.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/decode.v
+!i122 55
+L0 1 11
+R4
+r1
+!s85 0
+31
+R5
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/decode.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/decode.v|
+!i113 1
+R6
+R7
+vfetch
+R17
+!i10b 1
+!s100 ZJZVil[XZBlDKmFA6BKZJ0
+R1
+IO0ah6o4>TlU_Ab5CVhU;a0
+R2
+R3
+w1771831549
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/fetch.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/fetch.v
+!i122 56
+L0 1 24
+R4
+r1
+!s85 0
+31
+Z18 !s108 1771831711.000000
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/fetch.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/fetch.v|
+!i113 1
+R6
+R7
+vhart
+R17
+!i10b 1
+!s100 [_c7EBbB3iPHa^XQ8Q[kC2
+R1
+Ia70c8k[o]?[0AS=jj1zUL0
+R2
+R3
+Z19 w1771814415
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/hart.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/hart.v
+!i122 57
+L0 1 134
+R4
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/hart.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/hart.v|
+!i113 1
+R6
+R7
+vhart_tb
+R9
+!i10b 1
+!s100 TDJZM0Ob=YG4@n3>k7omR1
+R1
+IWjgLf3b>Q0^4F8eMQJaTi1
+R2
+R3
+R19
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/tb.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/tb.v
+!i122 64
+L0 1 132
+R4
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/tb.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/tb/tb.v|
+!i113 1
+R6
+R7
+vi_format_encoder
+R17
+!i10b 1
+!s100 JO2[[Q`7_Xo]Q15nhj0b73
+R1
+IQY[EL79iej>ikMh<[l3>X0
+R2
+R3
+w1771831514
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/i_format_encoder.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/i_format_encoder.v
+!i122 58
+L0 1 15
+R4
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/i_format_encoder.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/i_format_encoder.v|
+!i113 1
+R6
+R7
+vimm
+R17
+!i10b 1
+!s100 3@7<KFHG@A]@=fA1^k39f2
+R1
+I2=;O5zWT6H9VIZ6K@b0e=1
+R2
+R3
+w1770256340
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/imm.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/imm.v
+!i122 59
+L0 7 42
+R4
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/imm.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/imm.v|
+!i113 1
+R6
+R7
+vmux2to1
+R17
+!i10b 1
+!s100 iT9G@Xbbf?P=Ze>=^CNA_3
+R1
+I6;X0I6AAj7XmV39gCE;Nz1
+R2
+R3
+w1771819634
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/mux2to1.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/mux2to1.v
+!i122 60
+L0 1 8
+R4
+r1
+!s85 0
+31
+R18
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/mux2to1.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/mux2to1.v|
+!i113 1
+R6
+R7
+vrf
+R9
+!i10b 1
+!s100 7MVe:SLUgBZoaDlPV^9YX3
+R1
+IdH?c9V=E^GSNEIOggfBno3
+R2
+R3
+w1770480290
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/rf.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/rf.v
+!i122 61
+L0 8 62
+R4
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/rf.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/rf.v|
+!i113 1
+R6
+R7
+vshiffter
+R9
+!i10b 1
+!s100 >@@Rl[`M?o7gf6l3Gj>Fd2
+R1
+I0__Y;nT=TmLJgR[:TDNOH2
+R2
+R3
+w1771814424
+8C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/shiffer.v
+FC:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/shiffer.v
+!i122 62
+L0 1 35
+R4
+r1
+!s85 0
+31
+R13
+!s107 C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/shiffer.v|
+!s90 -reportprogress|300|-work|work|-stats=none|C:/Users/siddh/OneDrive/Desktop/Coding/College/ECE552/project3/code/rtl/shiffer.v|
+!i113 1
+R6
+R7
+vshifter_tb
+R8
+R9
+!i10b 1
+!s100 M9@:YaRlS<81JQEP<B>N^3
+R1
+I[;1]5]9jgP<N9<cMb7gZU0
+R2
+S1
+R3
+R10
+R11
+R12
+!i122 63
+L0 200 86
+R4
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 1
+R16
+R7
+vtb_alu_slt
+R8
+R9
+!i10b 1
+!s100 H^J8ChP8M:C1:5BSa_W3_1
+R1
+IFXdcjT[bh5n7JHBbFo8a:0
+R2
+S1
+R3
+R10
+R11
+R12
+!i122 63
+L0 3 92
+R4
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 1
+R16
+R7
+vtb_alu_slt_unsigned
+R8
+R9
+!i10b 1
+!s100 Gzd7Aoah7Q:<iN:o<M4d]3
+R1
+IcM3>LcKDh><O55SSnS;n21
+R2
+S1
+R3
+R10
+R11
+R12
+!i122 63
+L0 96 99
+R4
+r1
+!s85 0
+31
+R13
+R14
+R15
+!i113 1
+R16
+R7

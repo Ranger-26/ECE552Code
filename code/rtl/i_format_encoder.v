@@ -9,7 +9,7 @@ module i_format_encoder (
                    (opcode == 7'b1100011) ? 4: //B
                    (opcode == 7'b0110111) ? 8: //U
                    (opcode == 7'b1101111) ? 16://J
-                   5'b11111 //invalid
+                   5'b11111; //invalid
 
 
 endmodule
