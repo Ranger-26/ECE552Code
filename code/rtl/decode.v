@@ -29,3 +29,5 @@ module decode (
 
     //rf should be instantiated and implemented in the main module since it is needed by multiple other stages
 endmodule
+
+`default_nettype wire

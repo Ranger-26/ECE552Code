@@ -1,3 +1,5 @@
+`default_nettype none
+
 module i_format_encoder (
     input  wire [6:0] opcode,
     output wire [4:0] itype
@@ -13,3 +15,5 @@ module i_format_encoder (
 
 
 endmodule
+
+`default_nettype wire

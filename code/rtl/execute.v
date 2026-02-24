@@ -30,3 +30,5 @@ module execute (
 
     
 endmodule
+
+`default_nettype wire

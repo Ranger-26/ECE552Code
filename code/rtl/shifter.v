@@ -1,4 +1,6 @@
-module shiffter (
+`default_nettype none
+
+module shifter (
     input  wire [31:0] i_op,
   
     input  wire [ 4:0] shamt,
@@ -30,6 +32,7 @@ module shiffter (
 
     assign shifted_value = left ? leftShiftStage[4] : rightShiftStage[4];
 
-    
 
 endmodule
+
+`default_nettype wire

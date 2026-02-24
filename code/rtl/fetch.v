@@ -22,3 +22,5 @@ end
 assign PC = ProgramCounter;
 
 endmodule
+
+`default_nettype wire

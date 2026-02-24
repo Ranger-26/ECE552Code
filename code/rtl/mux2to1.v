@@ -1,3 +1,5 @@
+`default_nettype none
+
 module mux2to1 (
     input wire sel,
     input wire [31:0] in0,
@@ -6,3 +8,5 @@ module mux2to1 (
 );
     assign out = sel ? in1 : in0;
 endmodule
+
+`default_nettype wire

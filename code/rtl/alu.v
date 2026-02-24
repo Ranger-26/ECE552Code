@@ -74,7 +74,7 @@ module alu (
     assign signedLessThan = overflowOccured ? (i_op1[31] == 1 ? 1 : 0) : (subtraction[31]);
     assign unsignedLessThan = (i_op1 < i_op2);
 
-    shiffter shiftLeftLogicalUnit (
+    shifter shiftLeftLogicalUnit (
         .i_op(i_op1),
         .shamt(i_op2[4:0]),
         .left(1'b1),
@@ -82,7 +82,7 @@ module alu (
         .shifted_value(shiftLeftLogical)
     );
 
-    shiffter shiftRightLogicalUnit (
+    shifter shiftRightLogicalUnit (
         .i_op(i_op1),
         .shamt(i_op2[4:0]),
         .left(1'b0),
