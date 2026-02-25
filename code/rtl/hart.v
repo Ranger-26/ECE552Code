@@ -133,6 +133,104 @@ module hart #(
 `endif
 );
     // Fill in your implementation here.
+
+    //ALU Output signals
+    wire eq;
+    wire slt;
+    wire [31:0] alu_out;
+
+    //Control Unit Signals
+    wire halted; 
+    wire is_jal_r; 
+    wire pc_mod; 
+    wire use_pc_reg; 
+    wire mem_write; 
+    wire mem_read;
+    wire reg_write; 
+    wire [1:0] mem_size; 
+    wire [1:0] write_sel; 
+    wire [2:0] alu_op; 
+    wire use_imm; 
+    wire i_sub; 
+    wire i_arith; 
+    wire i_unsigned; 
+
+    
+    wire [31:0] branch_target_addr;
+    wire [31:0] jalr_target_addr;
+
+    wire [31:0] reg_write_data;
+
+    //fetch output signals
+    wire [31:0] PC;
+
+    //decode output signals
+    wire [4:0] rd;
+    wire [4:0] rs1;
+    wire [4:0] rs2;
+    wire [31:0] imm_sext;
+
+    //register file outputs
+    wire [31:0] rs1_data;
+    wire [31:0] rs2_data; 
+
+    //fetch unit
+    fetch fetch_stage(
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .pcmod(pcmod),
+        .branch_target_addr(branch_target_addr),
+        .jalr_target_addr(jalr_target_addr),
+        .is_jal_r(is_jal_r),
+        .halted(halted),
+        .PC(o_retire_pc)
+    );
+
+    decode decode_state(
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .instruction(i_imem_rdata),
+        .rd(rd),
+        .rs1(rs1),
+        .rs2(rs2),
+        .imm_sext(imm_sext)
+    );
+
+    rf reg_file(
+        .i_clk(i_clk),
+        .i_rst(i_rst),
+        .i_rs1_raddr(rs1),
+        .i_rs2_raddr(rs2),
+        .i_rd_wen(reg_write),
+        .i_rd_waddr(rd),
+        .i_rd_waddr(reg_write_data),
+        .o_rs1_rdata(rs1_data),
+        .o_rs2_rdata(rs2_data)
+    );
+
+    execute execute_state(
+        .clk(i_clk),
+        .rst(i_rst),
+        .read_data_1(rs1_data),
+        .read_data_2(rs2_data),
+        .PC(PC),
+        .imm_sext(imm_sext),
+        .use_pc_reg(use_pc_reg),
+        .use_imm(use_imm),
+        .alu_op(alu_op),
+        .i_sub(i_sub),
+        .i_arith(i_arith),
+        .i_unsigned(i_unsigned),
+        .alu_out(alu_out),
+        .eq(eq),
+        .slt(slt)
+    );
+
+    //memory state
+    
+
+    //writeback state
+
 endmodule
 
 `default_nettype wire
