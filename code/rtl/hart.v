@@ -140,20 +140,20 @@ module hart #(
     wire [31:0] alu_out;
 
     //Control Unit Signals
-    wire halted; 
-    wire is_jal_r; 
-    wire pc_mod; 
-    wire use_pc_reg; 
-    wire mem_write; 
-    wire mem_read;
-    wire reg_write; 
-    wire [1:0] mem_size; 
-    wire [1:0] write_sel; 
-    wire [2:0] alu_op; 
-    wire use_imm; 
-    wire i_sub; 
-    wire i_arith; 
-    wire i_unsigned; 
+    wire c_halted; 
+    wire c_is_jal_r; 
+    wire c_pc_mod; 
+    wire c_use_pc_reg; 
+    wire c_mem_write; 
+    wire c_mem_read;
+    wire c_reg_write; 
+    wire [1:0] c_mem_size; 
+    wire [1:0] c_write_sel; 
+    wire [2:0] c_alu_op; 
+    wire c_use_imm; 
+    wire c_i_sub; 
+    wire c_i_arith; 
+    wire c_i_unsigned; 
 
     
     wire [31:0] branch_target_addr;
@@ -174,18 +174,57 @@ module hart #(
     wire [31:0] rs1_data;
     wire [31:0] rs2_data; 
 
+    //assigning signals for outputs
+    assign o_retire_valid = ~c_halted; // wrong, needs to be in an always block?
+    assign o_retire_inst = i_imem_rdata;
+    assign o_imem_raddr = PC;
+    assign o_retire_pc = PC;
+    assign o_retire_rs1_raddr = rs1;
+    assign o_retire_rs2_raddr = rs2;
+    assign o_retire_rd_waddr = rd;
+    assign o_retire_trap = 0;
+    assign o_retire_halt = c_halted;
+    assign o_retire_rs1_rdata = rs1_data;
+    assign o_retire_rs2_rdata = rs2_data;
+    assign o_retire_rd_wdata = reg_write_data;
+
+
+    //control unit
+    control_unit control_unit_state(
+        ._eq(eq),
+        ._slt(slt),
+        ._instruction(i_imem_rdata),
+        .c_halted(c_halted),
+        .c_is_jal_r(c_is_jal_r),
+        .c_pc_mod(c_pc_mod),
+        .c_use_pc_reg(c_use_pc_reg),
+        .c_mem_write(c_mem_write),
+        .c_mem_read(c_mem_read),
+        .c_reg_write(c_reg_write),
+        .c_mem_size(c_mem_size),
+        .c_write_sel(c_write_sel),
+        .c_alu_op(c_alu_op),
+        .c_use_imm(c_use_imm),
+        .c_i_sub(c_i_sub),
+        .c_i_arith(c_i_arith),
+        .c_i_unsigned(c_i_unsigned)
+    );
+
+    
     //fetch unit
     fetch fetch_stage(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .pcmod(pcmod),
+        .pcmod(c_pc_mod),
         .branch_target_addr(branch_target_addr),
         .jalr_target_addr(jalr_target_addr),
-        .is_jal_r(is_jal_r),
-        .halted(halted),
-        .PC(o_retire_pc)
+        .is_jal_r(c_is_jal_r),
+        .halted(c_halted),
+        .PC(PC),
+        .nxt_pc(o_retire_next_pc)
     );
 
+    //decode
     decode decode_state(
         .i_clk(i_clk),
         .i_rst(i_rst),
@@ -196,18 +235,20 @@ module hart #(
         .imm_sext(imm_sext)
     );
 
+    //register file
     rf reg_file(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_rs1_raddr(rs1),
         .i_rs2_raddr(rs2),
-        .i_rd_wen(reg_write),
+        .i_rd_wen(c_reg_write),
         .i_rd_waddr(rd),
-        .i_rd_waddr(reg_write_data),
+        .i_rd_wdata(reg_write_data),
         .o_rs1_rdata(rs1_data),
         .o_rs2_rdata(rs2_data)
     );
 
+    //execute stage
     execute execute_state(
         .clk(i_clk),
         .rst(i_rst),
@@ -215,21 +256,25 @@ module hart #(
         .read_data_2(rs2_data),
         .PC(PC),
         .imm_sext(imm_sext),
-        .use_pc_reg(use_pc_reg),
-        .use_imm(use_imm),
-        .alu_op(alu_op),
-        .i_sub(i_sub),
-        .i_arith(i_arith),
-        .i_unsigned(i_unsigned),
+        .use_pc_reg(c_use_pc_reg),
+        .use_imm(c_use_imm),
+        .alu_op(c_alu_op),
+        .i_sub(c_i_sub),
+        .i_arith(c_i_arith),
+        .i_unsigned(c_i_unsigned),
         .alu_out(alu_out),
         .eq(eq),
         .slt(slt)
     );
 
-    //memory state
+    //memory state - TODO
     
 
-    //writeback state
+    //writeback stage - TODO: move to own module
+    assign reg_write_data = (c_write_sel == 0 ? PC + 4 : 
+                            c_write_sel == 1 ? i_dmem_rdata : 
+                            c_write_sel == 2 ? imm_sext:
+                            alu_out);
 
 endmodule
 

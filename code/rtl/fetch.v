@@ -6,7 +6,8 @@ module fetch (
     input wire [31:0] jalr_target_addr,
     input wire is_jal_r,
     input wire halted,
-    output wire [31:0] PC
+    output wire [31:0] PC,
+    output wire [31:0] nxt_pc
 );
 
 reg [31:0] ProgramCounter;
@@ -20,6 +21,7 @@ always @(posedge i_clk, posedge i_rst) begin
 end
 
 assign PC = ProgramCounter;
+assign nxt_pc = halted ? ProgramCounter : (is_jal_r ? jalr_target_addr : (pcmod ? branch_target_addr : ProgramCounter + 4));
 
 endmodule
 
