@@ -1,3 +1,5 @@
+`default_nettype none
+
 module execute (
     input wire clk,
     input wire rst,
@@ -17,15 +19,15 @@ module execute (
 );
 
     alu alu_main (
-        .a(use_pc_reg ? PC : read_data_1),
-        .b(use_imm ? imm_sext : read_data_2),
-        .alu_op(alu_op),
+        .i_op1(use_pc_reg ? PC : read_data_1),
+        .i_op2(use_imm ? imm_sext : read_data_2),
+        .i_opsel(alu_op),
         .i_sub(i_sub),
         .i_arith(i_arith),
         .i_unsigned(i_unsigned),
-        .result(alu_out),
-        .eq(eq),
-        .slt(slt)  
+        .o_result(alu_out),
+        .o_eq(eq),
+        .o_slt(slt)  
     );
 
     
