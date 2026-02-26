@@ -6,4 +6,5 @@ work/
 transcript
 *.mti
 *.mpf
+*.mpf_new
 *.wlf
