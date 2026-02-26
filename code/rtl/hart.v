@@ -161,6 +161,9 @@ module hart #(
 
     wire [31:0] reg_write_data;
 
+    // Aligned dmem output
+    wire [31:0] dmem_rdata_aligned;
+
     //fetch output signals
     wire [31:0] PC;
 
@@ -196,12 +199,18 @@ module hart #(
     assign branch_target_addr = PC + imm_sext;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
 
-    mem_mask mem_mask_unit(
+    dmem_mask mem_mask_unit(
         .mem_size(c_mem_size),
         .mem_addr_lsb(alu_out[1:0]),
         .mem_mask(o_dmem_mask)
     );
 
+    dmem_rdata_aligner mem_aligner_unit(
+        .mem_mask(o_dmem_mask),
+        .mem_rdata(i_dmem_rdata),
+        .i_unsigned(c_i_unsigned),
+        .mem_rdata_aligned(dmem_rdata_aligned)
+    );
 
     //control unit
     control_unit control_unit_state(
@@ -284,7 +293,7 @@ module hart #(
 
     //writeback stage - TODO: move to own module
     assign reg_write_data = (c_write_sel == 0 ? PC + 4 : 
-                            c_write_sel == 1 ? i_dmem_rdata : 
+                            c_write_sel == 1 ? dmem_rdata_aligned : 
                             c_write_sel == 3 ? imm_sext:
                             alu_out);
 

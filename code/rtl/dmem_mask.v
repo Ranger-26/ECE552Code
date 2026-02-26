@@ -1,6 +1,6 @@
 `default_nettype none
 
-module mem_mask (
+module dmem_mask (
     input  wire [1:0] mem_size,
     input  wire [1:0] mem_addr_lsb,
     output wire [3:0] mem_mask
