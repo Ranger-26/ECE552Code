@@ -46,7 +46,7 @@ module control_unit (
     assign c_halted = (opcode == EBREAK);
     assign c_is_jal_r = (opcode == JALR);
 
-    assign c_i_unsigned = (opcode == BRANCH) & funct3[1] | (opcode == LOAD) & funct3[2] | (funct3 == 3'b011); // last term for R/I types
+    assign c_i_unsigned = ((opcode == BRANCH) & funct3[1]) | ((opcode == LOAD) & funct3[2]) | (funct3 == 3'b011); // last term for R/I types
     assign c_pc_mod = (opcode == JAL) | ((opcode == BRANCH) & // jal or B type
         (funct3[0] ^ (funct3[2] ? _eq : _slt))); // Convenient logic (since funct3[1] never matters for CU, ALU uses it)
 
