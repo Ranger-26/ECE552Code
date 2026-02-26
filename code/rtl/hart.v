@@ -133,7 +133,7 @@ module hart #(
 `endif
 );
     // Fill in your implementation here.
-
+    
     //ALU Output signals
     wire eq;
     wire slt;
@@ -187,6 +187,14 @@ module hart #(
     assign o_retire_rs1_rdata = rs1_data;
     assign o_retire_rs2_rdata = rs2_data;
     assign o_retire_rd_wdata = reg_write_data;
+    assign o_dmem_addr = {alu_out[31:2], 2'b00}; // align to word boundary
+    assign o_dmem_wdata = rs2_data;
+    assign o_dmem_wen = c_mem_write;
+    mem_mask mem_mask_unit(
+        .mem_size(c_mem_size),
+        .mem_addr_lsb(alu_out[1:0]),
+        .mem_mask(o_dmem_mask)
+    );
 
 
     //control unit

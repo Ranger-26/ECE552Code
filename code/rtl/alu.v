@@ -44,10 +44,6 @@ module alu (
     // should be taken.
     output wire        o_slt
 );
-
-    wire [31:0] unsignedOp1;
-    wire [31:0] unsignedOp2;
-
     wire [31:0] addition;
     wire [31:0] subtraction;
     wire [31:0] shiftLeftLogical;
