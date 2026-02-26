@@ -41,7 +41,6 @@ module rf #(
     reg [31:0] memory [31:0];
     reg wen;
 
-    integer i;
     generate 
         if (BYPASS_EN == 1) begin : gen_logic_1
             assign o_rs1_rdata = ((i_rd_waddr == i_rs1_raddr) & i_rd_wen & (i_rd_waddr != 0)) ? i_rd_wdata : memory[i_rs1_raddr];
