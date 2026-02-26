@@ -4,7 +4,7 @@ module dmem_rdata_aligner (
     input wire [3:0] mem_mask,
     input wire [31:0] mem_rdata,
     input wire i_unsigned,
-    output wire [1:0] mem_rdata_aligned,
+    output wire [31:0] mem_rdata_aligned
 );
     assign mem_rdata_aligned = (mem_mask == 4'b0001) ? {i_unsigned ? 24'b0 : {24{mem_rdata[7]}}, mem_rdata[7:0]} :
         (mem_mask == 4'b0010) ? {i_unsigned ? 24'b0 : {24{mem_rdata[15]}}, mem_rdata[15:8]} :
