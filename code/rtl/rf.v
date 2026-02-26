@@ -42,16 +42,18 @@ module rf #(
     reg wen;
 
     integer i;
+    generate 
+        if (BYPASS_EN == 1) begin : gen_logic_1
+            assign o_rs1_rdata = ((i_rd_waddr == i_rs1_raddr) & i_rd_wen & (i_rd_waddr != 0)) ? i_rd_wdata : memory[i_rs1_raddr];
+            assign o_rs2_rdata = ((i_rd_waddr == i_rs2_raddr) & i_rd_wen & (i_rd_waddr != 0)) ? i_rd_wdata : memory[i_rs2_raddr];
+        end else begin : gen_logic_2
+            assign o_rs1_rdata = memory[i_rs1_raddr];
+            assign o_rs2_rdata = memory[i_rs2_raddr];
+        end
+    endgenerate
+    
 
-    if (BYPASS_EN == 1) begin
-        assign o_rs1_rdata = ((i_rd_waddr == i_rs1_raddr) & i_rd_wen & (i_rd_waddr != 0)) ? i_rd_wdata : memory[i_rs1_raddr];
-        assign o_rs2_rdata = ((i_rd_waddr == i_rs2_raddr) & i_rd_wen & (i_rd_waddr != 0)) ? i_rd_wdata : memory[i_rs2_raddr];
-    end else begin
-        assign o_rs1_rdata = memory[i_rs1_raddr];
-        assign o_rs2_rdata = memory[i_rs2_raddr];
-    end
-
-    always @(posedge i_clk, posedge i_rst, posedge i_rd_wen, negedge i_rd_wen) begin
+    always @(posedge i_clk) begin
         if (i_rst) begin
             for (i = 0; i < 32; i = i + 1) begin
                 memory[i] <= 32'b0;

@@ -14,7 +14,7 @@ module fetch (
 
 reg [31:0] ProgramCounter;
 
-always @(posedge i_clk, posedge i_rst) begin
+always @(posedge i_clk) begin
     if (i_rst) begin
         ProgramCounter <= 32'b0;
     end else begin
