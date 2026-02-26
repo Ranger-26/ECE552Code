@@ -65,7 +65,7 @@ module alu (
     assign exclusiveOr = i_op1 ^ i_op2;
     assign orResult = i_op1 | i_op2;
     assign andResult = i_op1 & i_op2;
-    assign overflowOccured = (i_op1[31] == 0 && i_op2[31] == 1) && (subtraction[31] != 0) || (i_op1[31] == 1 && i_op2[31] == 0) && (subtraction[31] != 1);
+    assign overflowOccured = ((i_op1[31] == 0) & (i_op2[31] == 1)) & (subtraction[31] != 0) | (i_op1[31] == 1 & i_op2[31] == 0) & (subtraction[31] != 1);
 
     assign signedLessThan = overflowOccured ? (i_op1[31] == 1 ? 1 : 0) : (subtraction[31]);
     assign unsignedLessThan = (i_op1 < i_op2);
