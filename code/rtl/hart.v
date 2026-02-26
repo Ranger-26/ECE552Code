@@ -175,7 +175,7 @@ module hart #(
     wire [31:0] rs2_data; 
 
     //assigning signals for outputs
-    assign o_retire_valid = ~c_halted; // wrong, needs to be in an always block?
+    assign o_retire_valid = 1; // wrong, needs to be in an always block?
     assign o_retire_inst = i_imem_rdata;
     assign o_imem_raddr = PC;
     assign o_retire_pc = PC;
@@ -190,6 +190,12 @@ module hart #(
     assign o_dmem_addr = {alu_out[31:2], 2'b00}; // align to word boundary
     assign o_dmem_wdata = rs2_data;
     assign o_dmem_wen = c_mem_write;
+    assign o_dmem_ren = c_mem_read;
+
+
+    assign branch_target_addr = PC + imm_sext;
+    assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
+
     mem_mask mem_mask_unit(
         .mem_size(c_mem_size),
         .mem_addr_lsb(alu_out[1:0]),
@@ -274,14 +280,12 @@ module hart #(
         .eq(eq),
         .slt(slt)
     );
-
-    //memory state - TODO
     
 
     //writeback stage - TODO: move to own module
     assign reg_write_data = (c_write_sel == 0 ? PC + 4 : 
                             c_write_sel == 1 ? i_dmem_rdata : 
-                            c_write_sel == 2 ? imm_sext:
+                            c_write_sel == 3 ? imm_sext:
                             alu_out);
 
 endmodule

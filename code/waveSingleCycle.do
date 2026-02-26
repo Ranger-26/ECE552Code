@@ -65,8 +65,6 @@ add wave -noupdate /hart_tb/dut/execute_state/alu_main/i_op2
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/o_result
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/o_eq
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/o_slt
-add wave -noupdate /hart_tb/dut/execute_state/alu_main/unsignedOp1
-add wave -noupdate /hart_tb/dut/execute_state/alu_main/unsignedOp2
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/addition
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/subtraction
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/shiftLeftLogical
@@ -76,11 +74,9 @@ add wave -noupdate /hart_tb/dut/execute_state/alu_main/orResult
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/andResult
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/unsignedLessThan
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/signedLessThan
-add wave -noupdate /hart_tb/dut/execute_state/alu_main/unsignedDifference
-add wave -noupdate /hart_tb/dut/execute_state/alu_main/unsignedSum
 add wave -noupdate /hart_tb/dut/execute_state/alu_main/overflowOccured
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {69 ps} 0}
+WaveRestoreCursors {{Cursor 1} {39 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 338
 configure wave -valuecolwidth 241
