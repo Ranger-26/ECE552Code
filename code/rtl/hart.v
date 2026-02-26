@@ -181,7 +181,7 @@ module hart #(
     assign o_retire_pc = PC;
     assign o_retire_rs1_raddr = rs1;
     assign o_retire_rs2_raddr = rs2;
-    assign o_retire_rd_waddr = rd;
+    assign o_retire_rd_waddr = c_reg_write ? rd : 5'd0; // if not writing to a register, set to 0
     assign o_retire_trap = 0;
     assign o_retire_halt = c_halted;
     assign o_retire_rs1_rdata = rs1_data;
