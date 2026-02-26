@@ -50,7 +50,7 @@ module control_unit (
     assign c_pc_mod = (opcode == JAL) | ((opcode == BRANCH) & // jal or B type
         (funct3[0] ^ (funct3[2] ? _slt : _eq))); // Convenient logic (since funct3[1] never matters for CU, ALU uses it)
 
-    assign c_i_sub = funct7[5];
+    assign c_i_sub = (opcode == R_ARITH) & funct7[5];
     assign c_i_arith = funct7[5];
 
     assign c_write_sel = ((opcode == JAL) | (opcode == JALR)) ? 2'b00 : // PC + 4 for JAL/JALR
