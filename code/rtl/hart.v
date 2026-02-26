@@ -191,7 +191,6 @@ module hart #(
     assign o_retire_rs2_rdata = rs2_data;
     assign o_retire_rd_wdata = reg_write_data;
     assign o_dmem_addr = {alu_out[31:2], 2'b00}; // align to word boundary
-    assign o_dmem_wdata = rs2_data;
     assign o_dmem_wen = c_mem_write;
     assign o_dmem_ren = c_mem_read;
 
@@ -205,11 +204,17 @@ module hart #(
         .mem_mask(o_dmem_mask)
     );
 
-    dmem_rdata_aligner mem_aligner_unit(
+    dmem_rdata_aligner mem_rdata_align_unit(
         .mem_mask(o_dmem_mask),
         .mem_rdata(i_dmem_rdata),
         .i_unsigned(c_i_unsigned),
         .mem_rdata_aligned(dmem_rdata_aligned)
+    );
+
+    dmem_wdata_aligner mem_wdata_align_unit(
+        .mem_mask(o_dmem_mask),
+        .mem_wdata(rs2_data),
+        .mem_wdata_aligned(o_dmem_wdata)
     );
 
     //control unit
