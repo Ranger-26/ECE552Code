@@ -39,7 +39,6 @@ module rf #(
 );
     // TODO: Fill in your implementation here.
     reg [31:0] memory [31:0];
-    reg wen;
 
     generate 
         if (BYPASS_EN == 1) begin : gen_logic_1
@@ -87,10 +86,8 @@ module rf #(
             memory[29] <= 0;
             memory[30] <= 0;
             memory[31] <= 0;
-        end else begin
-            wen <= i_rd_wen;
-            
-            if (wen) begin
+        end else begin            
+            if (i_rd_wen) begin
                 if (i_rd_waddr != 0) begin
                     memory[i_rd_waddr] <= i_rd_wdata;
                 end
