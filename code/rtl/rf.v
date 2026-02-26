@@ -55,9 +55,39 @@ module rf #(
 
     always @(posedge i_clk) begin
         if (i_rst) begin
-            for (i = 0; i < 32; i = i + 1) begin
-                memory[i] <= 32'b0;
-            end
+            memory[0] <= 0;
+            memory[1] <= 0;
+            memory[2] <= 0;
+            memory[3] <= 0;
+            memory[4] <= 0;
+            memory[5] <= 0;
+            memory[6] <= 0;
+            //fill in the rest of the registers with 0 no loop
+            memory[7] <= 0;
+            memory[8] <= 0;
+            memory[9] <= 0;
+            memory[10] <= 0;
+            memory[11] <= 0;
+            memory[12] <= 0;
+            memory[13] <= 0;
+            memory[14] <= 0;
+            memory[15] <= 0;
+            memory[16] <= 0;
+            memory[17] <= 0;
+            memory[18] <= 0;
+            memory[19] <= 0;
+            memory[20] <= 0;
+            memory[21] <= 0;
+            memory[22] <= 0;
+            memory[23] <= 0;
+            memory[24] <= 0;
+            memory[25] <= 0;
+            memory[26] <= 0;
+            memory[27] <= 0;
+            memory[28] <= 0;
+            memory[29] <= 0;
+            memory[30] <= 0;
+            memory[31] <= 0;
         end else begin
             wen <= i_rd_wen;
             
