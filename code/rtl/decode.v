@@ -4,29 +4,29 @@
 module decode (
     input wire i_clk,
     input wire i_rst,
-    input wire [31:0] instruction,
-    output wire [4:0] rd,
-    output wire [4:0] rs1,
-    output wire [4:0] rs2,
-    output wire [31:0] imm_sext
+    input wire [31:0] i_instruction,
+    output wire [4:0] o_rd,
+    output wire [4:0] o_rs1,
+    output wire [4:0] o_rs2,
+    output wire [31:0] o_imm_sext
 );
 
     wire [5:0] itype;
 
     i_format_encoder encoder (
-        .opcode(instruction[6:0]),
+        .opcode(i_instruction[6:0]),
         .itype(itype)
     );
 
     imm imm_gen (
-        .i_inst(instruction),
+        .i_inst(i_instruction),
         .i_format(itype),
-        .o_immediate(imm_sext)
+        .o_immediate(o_imm_sext)
     );
 
-    assign rd = instruction[11:7];
-    assign rs1 = instruction[19:15];
-    assign rs2 = instruction[24:20];
+    assign o_rd = i_instruction[11:7];
+    assign o_rs1 = i_instruction[19:15];
+    assign o_rs2 = i_instruction[24:20];
 
     //rf should be instantiated and implemented in the main module since it is needed by multiple other stages
 endmodule

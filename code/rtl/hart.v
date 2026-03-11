@@ -192,7 +192,7 @@ module hart #(
     // IF/ID
     reg [31:0] IF_ID_curr_pc;
     reg [31:0] IF_ID_instruction;
-    reg [5:0] IF_ID_format;
+    wire [5:0] IF_ID_format;
     wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
     wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
@@ -203,7 +203,7 @@ module hart #(
     reg [31:0] ID_EX_next_pc;
     reg [31:0] ID_EX_curr_pc;
     reg [4:0] ID_EX_write_reg;
-    reg [5:0] ID_EX_opcode;
+    reg [6:0] ID_EX_opcode;
     reg [2:0] ID_EX_funct3;
     reg ID_EX_c_is_jal_r;
     reg ID_EX_c_use_pc_reg;
@@ -233,9 +233,12 @@ module hart #(
     reg [31:0] MEM_WB_mem_out;
     reg [31:0] MEM_WB_imm;
     reg [31:0] MEM_WB_next_pc;
+    reg [31:0] MEM_WB_alu_out;
     reg [4:0] MEM_WB_write_reg;
-    reg [1:0] EX_MEM_c_write_sel;
+    reg [1:0] MEM_WB_c_write_sel;
+
     reg MEM_WB_c_reg_write;
+
     
     //assigning signals for outputs
     assign o_retire_valid = 1; // wrong, needs to be in an always block?
@@ -264,7 +267,7 @@ module hart #(
     control_unit control_unit_state(
         ._eq(eq),
         ._slt(slt),
-        ._instruction(i_imem_rdata),
+        ._instruction(IF_ID_instruction),
         .c_halted(c_halted),
         .c_is_jal_r(c_is_jal_r),
         .c_pc_mod(c_pc_mod),
@@ -288,25 +291,36 @@ module hart #(
     fetch fetch_stage(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .pcmod(c_pc_mod),
-        .branch_target_addr(branch_target_addr),
-        .jalr_target_addr(jalr_target_addr),
-        .is_jal_r(c_is_jal_r),
-        .halted(c_halted),
-        .PC(PC),
-        .nxt_pc(o_retire_next_pc)
+        .i_pcmod(c_pc_mod),
+        .i_instr_op(i_imem_rdata[6:0]),
+        .i_branch_target_addr(branch_target_addr),
+        .i_jalr_target_addr(jalr_target_addr),
+        .i_is_jal_r(c_is_jal_r),
+        .i_halted(c_halted),
+        .o_PC(PC),
+        .o_nxt_pc(o_retire_next_pc),
+        .o_itype(IF_ID_format)
     );
+
+    //pipeline register logic for IF/ID
+    always @(posedge i_clk) begin
+        IF_ID_instruction <= i_imem_rdata;
+        IF_ID_curr_pc <= PC;
+    end
+    
 
     //decode
     decode decode_state(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .instruction(i_imem_rdata),
-        .rd(rd),
-        .rs1(rs1),
-        .rs2(rs2),
-        .imm_sext(imm_sext)
+        .i_instruction(IF_ID_instruction),
+        .o_rd(rd),
+        .o_rs1(rs1),
+        .o_rs2(rs2),
+        .o_imm_sext(imm_sext)
     );
+
+    //check for registers beign the same as the ones in the next pipeline register
 
     //register file
     rf reg_file(
@@ -321,48 +335,107 @@ module hart #(
         .o_rs2_rdata(rs2_data)
     );
 
+       //pipeline register logic for ID/EX
+    always @(posedge i_clk) begin
+        ID_EX_rs1_data <= rs1_data;
+        ID_EX_rs2_data <= rs2_data;
+        ID_EX_imm <= imm_sext;
+        ID_EX_curr_pc <= IF_ID_curr_pc;
+        //Next PC?
+        ID_EX_next_pc <= IF_ID_curr_pc + 4;
+        ID_EX_write_reg <= rd;
+        ID_EX_opcode <= IF_ID_instruction[6:0];
+        ID_EX_funct3 <= IF_ID_instruction[14:12];
+        ID_EX_c_is_jal_r <= c_is_jal_r;
+        ID_EX_c_use_pc_reg <= c_use_pc_reg;
+        ID_EX_c_mem_write <= c_mem_write;
+        ID_EX_c_mem_read <= c_mem_read;
+        ID_EX_c_reg_write <= c_reg_write;
+        ID_EX_c_mem_size <= c_mem_size;
+        ID_EX_c_write_sel <= c_write_sel;
+        ID_EX_c_alu_op <= c_alu_op;
+        ID_EX_c_use_imm <= c_use_imm;
+        ID_EX_c_sub <= c_i_sub;
+        ID_EX_c_arith <= c_i_arith;
+        ID_EX_c_unsigned <= c_i_unsigned;
+    end
+
     //execute stage
     execute execute_state(
         .clk(i_clk),
         .rst(i_rst),
-        .read_data_1(rs1_data),
-        .read_data_2(rs2_data),
-        .PC(PC),
-        .imm_sext(imm_sext),
-        .use_pc_reg(c_use_pc_reg),
-        .use_imm(c_use_imm),
-        .alu_op(c_alu_op),
-        .i_sub(c_i_sub),
-        .i_arith(c_i_arith),
-        .i_unsigned(c_i_unsigned),
+        .read_data_1(ID_EX_rs1_data),
+        .read_data_2(ID_EX_rs2_data),
+        .PC(ID_EX_curr_pc),
+        .imm_sext(ID_EX_imm),
+        .use_pc_reg(ID_EX_c_use_pc_reg),
+        .use_imm(ID_EX_c_use_imm),
+        .alu_op(ID_EX_c_alu_op),
+        .i_sub(ID_EX_c_sub),
+        .i_arith(ID_EX_c_arith),
+        .i_unsigned(ID_EX_c_unsigned),
         .alu_out(alu_out),
         .eq(eq),
         .slt(slt)
     );
     
+    //EX/MEM pipeline register logic
+    always @(posedge i_clk) begin
+        EX_MEM_alu_out <= alu_out;
+        EX_MEM_rs2_data <= ID_EX_rs2_data;
+        EX_MEM_imm <= ID_EX_imm;
+        EX_MEM_next_pc <= ID_EX_next_pc;
+        EX_MEM_write_reg <= ID_EX_write_reg;
+        EX_MEM_c_unsigned <= ID_EX_c_unsigned;
+        EX_MEM_c_mem_write <= ID_EX_c_mem_write;
+        EX_MEM_c_mem_read <= ID_EX_c_mem_read;
+        EX_MEM_c_reg_write <= ID_EX_c_reg_write;
+        EX_MEM_c_write_sel <= ID_EX_c_write_sel;
+        EX_MEM_c_mem_size <= ID_EX_c_mem_size;
+    end
+
     dmem_mask mem_mask_unit(
-        .mem_size(c_mem_size),
-        .mem_addr_lsb(alu_out[1:0]),
+        .mem_size(EX_MEM_c_mem_size),
+        .mem_addr_lsb(EX_MEM_alu_out[1:0]),
         .mem_mask(o_dmem_mask)
     );
 
     dmem_rdata_aligner mem_rdata_align_unit(
         .mem_mask(o_dmem_mask),
         .mem_rdata(i_dmem_rdata),
-        .i_unsigned(c_i_unsigned),
+        .i_unsigned(EX_MEM_c_unsigned),
         .mem_rdata_aligned(dmem_rdata_aligned)
     );
 
     dmem_wdata_aligner mem_wdata_align_unit(
         .mem_mask(o_dmem_mask),
-        .mem_wdata(rs2_data),
+        .mem_wdata(EX_MEM_rs2_data),
         .mem_wdata_aligned(o_dmem_wdata)
     );
+
+    //MEM/WB pipeline register logic
+    always @(posedge i_clk) begin
+        MEM_WB_mem_out <= o_dmem_wdata;
+        MEM_WB_imm <= EX_MEM_imm;
+        MEM_WB_next_pc <= EX_MEM_next_pc;
+        MEM_WB_alu_out <= EX_MEM_alu_out;
+        MEM_WB_write_reg <= EX_MEM_write_reg;
+        MEM_WB_c_write_sel <= EX_MEM_c_write_sel;
+        MEM_WB_c_reg_write <= EX_MEM_c_reg_write;
+    end
+
     //writeback stage - TODO: move to own module
-    assign reg_write_data = (c_write_sel == 0 ? PC + 4 : 
-                            c_write_sel == 1 ? dmem_rdata_aligned : 
-                            c_write_sel == 3 ? imm_sext:
-                            alu_out);
+    assign reg_write_data = (MEM_WB_c_write_sel == 0 ? MEM_WB_next_pc : 
+                            MEM_WB_c_write_sel == 1 ? dmem_rdata_aligned : 
+                            MEM_WB_c_write_sel == 3 ? MEM_WB_imm:
+                            MEM_WB_alu_out);
+    
+    assign o_retire_dmem_addr = EX_MEM_alu_out;
+    assign o_retire_dmem_ren = EX_MEM_c_mem_read;
+    assign o_retire_dmem_wen = EX_MEM_c_mem_write;
+    assign o_retire_dmem_mask = o_dmem_mask;
+    assign o_retire_dmem_wdata = EX_MEM_rs2_data;
+    assign o_retire_dmem_rdata = dmem_rdata_aligned;
     //stalling conditions:
     // RAW hazards,
     //    - Check for RAW hazards 
