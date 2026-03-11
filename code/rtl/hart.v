@@ -1,5 +1,6 @@
 `default_nettype none
 
+
 module hart #(
     // After reset, the program counter (PC) should be initialized to this
     // address and start executing instructions from there.
@@ -126,7 +127,17 @@ module hart #(
     // the next program counter after the instruction is retired. For most
     // instructions, this is `o_retire_pc + 4`, but must be the branch or jump
     // target for *taken* branches and jumps.
-    output wire [31:0] o_retire_next_pc
+    output wire [31:0] o_retire_next_pc,
+
+    //other signals
+
+    //raw bytes recieved from memory
+    output wire [31:0] o_retire_dmem_addr,
+    output wire        o_retire_dmem_ren,
+    output wire        o_retire_dmem_wen,
+    output wire [ 3:0] o_retire_dmem_mask,
+    output wire [31:0] o_retire_dmem_wdata,
+    output  wire [31:0] o_retire_dmem_rdata
 
 `ifdef RISCV_FORMAL
     ,`RVFI_OUTPUTS,
@@ -309,7 +320,13 @@ module hart #(
                             c_write_sel == 1 ? dmem_rdata_aligned : 
                             c_write_sel == 3 ? imm_sext:
                             alu_out);
-
+    //stalling conditions:
+    // RAW hazards,
+    //    - Check for RAW hazards 
+    //          - Load to Use Stall //
+    //          - Load and Store (MEM-MEM) 
+    // Branch, Jump hazards(Branch stall til X, Jump stall till X)
+    // Halt, make sure that we execute all instructions currently in the pipeline 
 endmodule
 
 `default_nettype wire
