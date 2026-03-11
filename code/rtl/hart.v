@@ -186,13 +186,56 @@ module hart #(
 
     //register file outputs
     wire [31:0] rs1_data;
-    wire [31:0] rs2_data; 
+    wire [31:0] rs2_data;
 
-    //Pipeline registers
-    reg [63:0] FD; //store the current PC, and the current instruction bitss
-    reg [200:0]  DX; //store register read 1, register read 2, reg 1 value, reg 2 value, write register, immediate, opcode+funct3, next pc, branch target address,WReg, Every Control Signal
-    reg [1:0] XM; //ALUOUT, imm, next pc - CONTROL: i_uns, MemW, MemR, RegWriteSel, MemSize
-    reg [1:0] MW; // MemOut, WriteSel, AluOut, Imm, Nextpc
+    // Pipeline Registers
+    // IF/ID
+    reg [31:0] IF_ID_curr_pc;
+    reg [31:0] IF_ID_instruction;
+    reg [5:0] IF_ID_format;
+    wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
+    wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
+    wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
+    // ID/EX
+    reg [31:0] ID_EX_rs1_data;
+    reg [31:0] ID_EX_rs2_data;
+    reg [31:0] ID_EX_imm;
+    reg [31:0] ID_EX_next_pc;
+    reg [31:0] ID_EX_curr_pc;
+    reg [4:0] ID_EX_write_reg;
+    reg [5:0] ID_EX_opcode;
+    reg [2:0] ID_EX_funct3;
+    reg ID_EX_c_is_jal_r;
+    reg ID_EX_c_use_pc_reg;
+    reg ID_EX_c_mem_write;
+    reg ID_EX_c_mem_read;
+    reg ID_EX_c_reg_write;
+    reg [1:0] ID_EX_c_mem_size;
+    reg [1:0] ID_EX_c_write_sel;
+    reg [2:0] ID_EX_c_alu_op;
+    reg ID_EX_c_use_imm;
+    reg ID_EX_c_sub;
+    reg ID_EX_c_arith;
+    reg ID_EX_c_unsigned;
+    // EX/MEM
+    reg [31:0] EX_MEM_alu_out;
+    reg [31:0] EX_MEM_rs2_data;
+    reg [31:0] EX_MEM_imm;
+    reg [31:0] EX_MEM_next_pc;
+    reg [4:0] EX_MEM_write_reg;
+    reg EX_MEM_c_unsigned;
+    reg EX_MEM_c_mem_write;
+    reg EX_MEM_c_mem_read;
+    reg EX_MEM_c_reg_write;
+    reg [1:0] EX_MEM_c_write_sel;
+    reg [1:0] EX_MEM_c_mem_size;
+    // MEM/WB
+    reg [31:0] MEM_WB_mem_out;
+    reg [31:0] MEM_WB_imm;
+    reg [31:0] MEM_WB_next_pc;
+    reg [4:0] MEM_WB_write_reg;
+    reg [1:0] EX_MEM_c_write_sel;
+    reg MEM_WB_c_reg_write;
     
     //assigning signals for outputs
     assign o_retire_valid = 1; // wrong, needs to be in an always block?
