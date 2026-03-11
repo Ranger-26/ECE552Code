@@ -177,6 +177,12 @@ module hart #(
     wire [31:0] rs1_data;
     wire [31:0] rs2_data; 
 
+    //Pipeline registers
+    reg [63:0] FD; //store the current PC, and the current instruction bitss
+    reg [200:0]  DX; //store register read 1, register read 2, reg 1 value, reg 2 value, write register, immediate, opcode+funct3, next pc, branch target address,WReg, Every Control Signal
+    reg [1:0] XM; //ALUOUT, imm, next pc - CONTROL: i_uns, MemW, MemR, RegWriteSel, MemSize
+    reg [1:0] MW; // MemOut, WriteSel, AluOut, Imm, Nextpc
+    
     //assigning signals for outputs
     assign o_retire_valid = 1; // wrong, needs to be in an always block?
     assign o_retire_inst = i_imem_rdata;
@@ -198,24 +204,7 @@ module hart #(
     assign branch_target_addr = PC + imm_sext;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
 
-    dmem_mask mem_mask_unit(
-        .mem_size(c_mem_size),
-        .mem_addr_lsb(alu_out[1:0]),
-        .mem_mask(o_dmem_mask)
-    );
 
-    dmem_rdata_aligner mem_rdata_align_unit(
-        .mem_mask(o_dmem_mask),
-        .mem_rdata(i_dmem_rdata),
-        .i_unsigned(c_i_unsigned),
-        .mem_rdata_aligned(dmem_rdata_aligned)
-    );
-
-    dmem_wdata_aligner mem_wdata_align_unit(
-        .mem_mask(o_dmem_mask),
-        .mem_wdata(rs2_data),
-        .mem_wdata_aligned(o_dmem_wdata)
-    );
 
     //control unit
     control_unit control_unit_state(
@@ -237,6 +226,8 @@ module hart #(
         .c_i_arith(c_i_arith),
         .c_i_unsigned(c_i_unsigned)
     );
+
+
 
     
     //fetch unit
@@ -295,7 +286,24 @@ module hart #(
         .slt(slt)
     );
     
+    dmem_mask mem_mask_unit(
+        .mem_size(c_mem_size),
+        .mem_addr_lsb(alu_out[1:0]),
+        .mem_mask(o_dmem_mask)
+    );
 
+    dmem_rdata_aligner mem_rdata_align_unit(
+        .mem_mask(o_dmem_mask),
+        .mem_rdata(i_dmem_rdata),
+        .i_unsigned(c_i_unsigned),
+        .mem_rdata_aligned(dmem_rdata_aligned)
+    );
+
+    dmem_wdata_aligner mem_wdata_align_unit(
+        .mem_mask(o_dmem_mask),
+        .mem_wdata(rs2_data),
+        .mem_wdata_aligned(o_dmem_wdata)
+    );
     //writeback stage - TODO: move to own module
     assign reg_write_data = (c_write_sel == 0 ? PC + 4 : 
                             c_write_sel == 1 ? dmem_rdata_aligned : 
