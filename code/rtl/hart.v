@@ -381,7 +381,7 @@ module hart #(
                 IF_ID_pc_plus4,
                 IF_ID_format,
                 IF_ID_valid} <= 0;
-        end else begin 
+        end else if (!flush_ID_EX) begin 
             IF_ID_instruction <= i_imem_rdata;
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
