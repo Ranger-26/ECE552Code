@@ -26,9 +26,10 @@ module fetch (
     assign o_pc_plus4 = ProgramCounter + 4;
 
     // cascaded pc muxes
-    assign o_next_pc = (i_halted | i_stall) ? ProgramCounter :
+    assign o_next_pc = (i_halted) ? ProgramCounter :
         i_is_jalr ? i_jalr_target_addr :
         i_pc_mod ? i_branch_target_addr :
+        i_stall ? ProgramCounter :
         o_pc_plus4;
 
     always @(posedge i_clk) begin

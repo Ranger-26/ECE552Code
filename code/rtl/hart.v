@@ -257,6 +257,7 @@ module hart #(
     reg [31:0] MEM_WB_pc_plus4;
     reg [31:0] MEM_WB_alu_out;
     reg [4:0] MEM_WB_write_reg;
+    reg [31:0] MEM_WB_dmem_rdata_aligned;
     reg [1:0] MEM_WB_c_write_sel;
     reg MEM_WB_c_reg_write;
     // FOR TB ONLY
@@ -273,18 +274,19 @@ module hart #(
     reg MEM_WB_c_mem_write;
     reg [3:0] MEM_WB_dmem_mask;
     reg [31:0] MEM_WB_dmem_rdata;
+    reg [31:0] MEM_WB_dmem_wdata_aligned;
 
     // EFFECTIVE HALT
     wire effective_halted = c_halted | ID_EX_c_halted;
 
     // stall signals
-    wire flush_IF_ID;
-    wire flush_ID_EX;
+    wire stall_IF;
+    wire stall_ID;
     wire stall_pc;
  
     // pipeline reg resets
-    wire rst_IF_ID = i_rst | effective_halted | flush_IF_ID;
-    wire rst_ID_EX = i_rst | flush_ID_EX;
+    wire rst_IF_ID = i_rst | effective_halted | stall_IF; // stall fetch -> nop into decode (IF/ID reg)
+    wire rst_ID_EX = i_rst | stall_ID; // stall decode -> nop into execute (ID/EX reg)
 
     // retires
     assign o_retire_valid = MEM_WB_valid;
@@ -303,7 +305,7 @@ module hart #(
     assign o_retire_dmem_ren = MEM_WB_c_mem_read;
     assign o_retire_dmem_wen = MEM_WB_c_mem_write;
     assign o_retire_dmem_mask = MEM_WB_dmem_mask;
-    assign o_retire_dmem_wdata = MEM_WB_rs2_data;
+    assign o_retire_dmem_wdata = MEM_WB_dmem_wdata_aligned;
     assign o_retire_dmem_rdata = MEM_WB_dmem_rdata;
 
     // memory interfaces
@@ -351,8 +353,8 @@ module hart #(
         .c_is_jalr(c_is_jalr),
         .ID_EX_c_is_jalr(ID_EX_c_is_jalr),
         .stall_pc(stall_pc),
-        .flush_IF_ID(flush_IF_ID),
-        .flush_ID_EX(flush_ID_EX)
+        .stall_IF(stall_IF),
+        .stall_ID(stall_ID)
     );
 
     
@@ -381,7 +383,7 @@ module hart #(
                 IF_ID_pc_plus4,
                 IF_ID_format,
                 IF_ID_valid} <= 0;
-        end else if (!flush_ID_EX) begin 
+        end else if (~stall_ID) begin // stall decode -> dont update IF/ID
             IF_ID_instruction <= i_imem_rdata;
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
@@ -606,12 +608,14 @@ module hart #(
             MEM_WB_c_mem_write <= EX_MEM_c_mem_write;
             MEM_WB_dmem_mask <= o_dmem_mask;
             MEM_WB_dmem_rdata <= i_dmem_rdata;
+            MEM_WB_dmem_rdata_aligned <= dmem_rdata_aligned;
+            MEM_WB_dmem_wdata_aligned <= o_dmem_wdata;
         end
     end
 
     //writeback stage - TODO: move to own module
     assign reg_write_data = (MEM_WB_c_write_sel == 0 ? MEM_WB_pc_plus4 : 
-                            MEM_WB_c_write_sel == 1 ? dmem_rdata_aligned : 
+                            MEM_WB_c_write_sel == 1 ? MEM_WB_dmem_rdata_aligned : 
                             MEM_WB_c_write_sel == 3 ? MEM_WB_imm:
                             MEM_WB_alu_out);
     

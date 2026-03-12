@@ -13,22 +13,23 @@ module hazard_detector (
   input wire c_is_jalr,
   input wire ID_EX_c_is_jalr,
   output wire stall_pc,
-  output wire flush_IF_ID,
-  output wire flush_ID_EX
+  output wire stall_IF,
+  output wire stall_ID
 );
-  localparam R_TYPE = 6'b000001;
-  localparam B_TYPE = 6'b001000;
   localparam J_TYPE = 6'b100000;
+  localparam B_TYPE = 6'b001000;
+  localparam S_TYPE = 6'b000100;
+  localparam R_TYPE = 6'b000001;
 
   wire ID_control_flow = (ID_format == J_TYPE) | (ID_format == B_TYPE) | (c_is_jalr);
   wire EX_control_flow = (EX_format == J_TYPE) | (EX_format == B_TYPE) | (ID_EX_c_is_jalr);
 
-  wire adjacent_hazard = ((IF_ID_rs1 == ID_EX_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == ID_EX_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE)) & (IF_ID_rs2 != 0));
-  wire separated_hazard = ((IF_ID_rs1 == EX_MEM_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == EX_MEM_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE)) & (IF_ID_rs2 != 0));
+  wire adjacent_hazard = ((IF_ID_rs1 == ID_EX_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == ID_EX_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE) | (ID_format == S_TYPE)) & (IF_ID_rs2 != 0));
+  wire separated_hazard = ((IF_ID_rs1 == EX_MEM_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == EX_MEM_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE) | (ID_format == S_TYPE)) & (IF_ID_rs2 != 0));
 
-  assign flush_IF_ID = ID_control_flow & (!flush_ID_EX); // stall fetch -> nop into decode (IF/ID reg)
-  assign flush_ID_EX = adjacent_hazard | separated_hazard; // stall decode -> nop into execute (ID/EX reg)
-  assign stall_pc = flush_IF_ID | flush_ID_EX;
+  assign stall_IF = (ID_control_flow | EX_control_flow) & (~stall_ID); // can't nop decode for a decode stall
+  assign stall_ID = adjacent_hazard | separated_hazard;
+  assign stall_pc = stall_IF | stall_ID;
 endmodule
 
 `default_nettype wire
