@@ -22,8 +22,8 @@ module hazard_detector (
   wire ID_control_flow = (ID_format == J_TYPE) | (ID_format == B_TYPE) | (c_is_jalr);
   wire EX_control_flow = (EX_format == J_TYPE) | (EX_format == B_TYPE) | (ID_EX_c_is_jalr);
 
-  wire adjacent_hazard = (IF_ID_rs1 == ID_EX_write_reg) | ((IF_ID_rs2 == ID_EX_write_reg) & (ID_format == R_TYPE));
-  wire separated_hazard = (IF_ID_rs1 == EX_MEM_write_reg) | ((IF_ID_rs2 == EX_MEM_write_reg) & (ID_format == R_TYPE));
+  wire adjacent_hazard = (IF_ID_rs1 == ID_EX_write_reg) & (IF_ID_rs1 != 0) | ((IF_ID_rs2 == ID_EX_write_reg) & (ID_format == R_TYPE) & (IF_ID_rs2 != 0));
+  wire separated_hazard = (IF_ID_rs1 == EX_MEM_write_reg) & (IF_ID_rs1 != 0) | ((IF_ID_rs2 == EX_MEM_write_reg) & (ID_format == R_TYPE) & (IF_ID_rs2 != 0));
 
   assign flush_IF_ID = (adjacent_hazard | separated_hazard | (EX_format == B_TYPE));
   assign stall_pc = flush_IF_ID | (ID_format == B_TYPE);
