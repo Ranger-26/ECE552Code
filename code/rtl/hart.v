@@ -152,8 +152,8 @@ module hart #(
 
     //Control Unit Signals
     wire c_halted; 
-    wire c_is_jal_r; 
-    wire c_pc_mod; 
+    wire c_is_jalr; 
+    wire c_pc_mod; // EX STAGE
     wire c_use_pc_reg; 
     wire c_mem_write; 
     wire c_mem_read;
@@ -177,7 +177,8 @@ module hart #(
 
     //fetch output signals
     wire [31:0] PC;
-    // wire [31:0] pc_plus4;
+    wire [31:0] pc_plus4;
+    wire [31:0] next_pc;
 
     //decode output signals
     wire [4:0] rd;
@@ -200,6 +201,7 @@ module hart #(
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
     // FOR TB ONLY
     reg IF_ID_valid;
+    reg [31:0] IF_ID_next_pc;
 
     // ID/EX
     reg [31:0] ID_EX_rs1_data;
@@ -210,7 +212,7 @@ module hart #(
     reg [4:0] ID_EX_write_reg;
     reg [6:0] ID_EX_opcode;
     reg [2:0] ID_EX_funct3;
-    reg ID_EX_c_is_jal_r;
+    reg ID_EX_c_is_jalr;
     reg ID_EX_c_use_pc_reg;
     reg ID_EX_c_mem_write;
     reg ID_EX_c_mem_read;
@@ -225,6 +227,7 @@ module hart #(
     // FOR TB ONLY
     reg ID_EX_valid;
     reg [31:0] ID_EX_instruction;
+    reg [31:0] ID_EX_next_pc;
     reg [4:0] ID_EX_rs1_raddr;
     reg [4:0] ID_EX_rs2_raddr;
     reg ID_EX_c_halted;
@@ -311,8 +314,7 @@ module hart #(
         ._slt(slt),
         ._instruction(IF_ID_instruction),
         .c_halted(c_halted),
-        .c_is_jal_r(c_is_jal_r),
-        .c_pc_mod(c_pc_mod),
+        .c_is_jalr(c_is_jalr),
         .c_use_pc_reg(c_use_pc_reg),
         .c_mem_write(c_mem_write),
         .c_mem_read(c_mem_read),
@@ -321,6 +323,7 @@ module hart #(
         .c_write_sel(c_write_sel),
         .c_alu_op(c_alu_op),
         .c_use_imm(c_use_imm),
+        .c_pc_mod(c_pc_mod)
         .c_i_sub(c_i_sub),
         .c_i_arith(c_i_arith),
         .c_i_unsigned(c_i_unsigned)
@@ -333,14 +336,15 @@ module hart #(
     fetch fetch_stage(
         .i_clk(i_clk),
         .i_rst(i_rst),
-        .i_pcmod(c_pc_mod),
+        .i_pc_mod(c_pc_mod),
         .i_instr_op(i_imem_rdata[6:0]),
         .i_branch_target_addr(branch_target_addr),
         .i_jalr_target_addr(jalr_target_addr),
         .i_is_jal_r(c_is_jal_r),
         .i_halted(effective_halted),
         .o_PC(PC),
-        // .o_pc_plus4(pc_plus4),
+        .o_next_pc(next_pc),
+        .o_pc_plus4(pc_plus4),
         .o_itype(IF_ID_format)
     );
 
@@ -349,12 +353,14 @@ module hart #(
         if (i_rst | effective_halted) begin
             {IF_ID_curr_pc,
                 IF_ID_instruction,
+                IF_ID_pc_plus4,
                 IF_ID_valid} <= 0;
         end else begin 
-            IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
             IF_ID_instruction <= i_imem_rdata;
-            // IF_ID_pc_plus4 <= pc_plus4;
+            IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
+            IF_ID_next_pc <= next_pc;
+            IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
         end
     end
     
@@ -397,7 +403,7 @@ module hart #(
                 ID_EX_write_reg,
                 ID_EX_opcode,
                 ID_EX_funct3,
-                ID_EX_c_is_jal_r,
+                ID_EX_c_is_jalr,
                 ID_EX_c_use_pc_reg,
                 ID_EX_c_mem_write,
                 ID_EX_c_mem_read,
@@ -420,11 +426,11 @@ module hart #(
             ID_EX_rs2_data <= rs2_data;
             ID_EX_imm <= imm_sext;
             ID_EX_curr_pc <= IF_ID_curr_pc;
-            ID_EX_pc_plus4 <= IF_ID_curr_pc + 4;
+            ID_EX_pc_plus4 <= IF_ID_pc_plus4;
             ID_EX_write_reg <= rd;
             ID_EX_opcode <= IF_ID_instruction[6:0];
             ID_EX_funct3 <= IF_ID_instruction[14:12];
-            ID_EX_c_is_jal_r <= c_is_jal_r;
+            ID_EX_c_is_jalr <= c_is_jalr;
             ID_EX_c_use_pc_reg <= c_use_pc_reg;
             ID_EX_c_mem_write <= c_mem_write;
             ID_EX_c_mem_read <= c_mem_read;
@@ -460,6 +466,7 @@ module hart #(
         .i_sub(ID_EX_c_sub),
         .i_arith(ID_EX_c_arith),
         .i_unsigned(ID_EX_c_unsigned),
+        .i_is_jalr(ID_EX_c_is_jalr),
         .alu_out(alu_out),
         .eq(eq),
         .slt(slt)
