@@ -276,11 +276,13 @@ module hart #(
 
     // EFFECTIVE HALT
     wire effective_halted = c_halted | ID_EX_c_halted;
-    
+
+    // stall signals
+    wire flush_IF_ID;
+    wire stall_pc;
+ 
     // pipeline reg resets
     wire rst_IF_ID = i_rst | effective_halted | flush_IF_ID;
-
-    wire stall_pc;
 
     // retires
     assign o_retire_valid = MEM_WB_valid;
