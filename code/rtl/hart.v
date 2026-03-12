@@ -274,6 +274,7 @@ module hart #(
     reg MEM_WB_c_mem_write;
     reg [3:0] MEM_WB_dmem_mask;
     reg [31:0] MEM_WB_dmem_rdata;
+    reg [31:0] MEM_WB_dmem_addr;
     reg [31:0] MEM_WB_dmem_wdata_aligned;
 
     // EFFECTIVE HALT
@@ -301,7 +302,7 @@ module hart #(
     assign o_retire_rs2_rdata = MEM_WB_rs2_data;
     assign o_retire_halt = MEM_WB_c_halted;
     assign o_retire_rd_wdata = reg_write_data;
-    assign o_retire_dmem_addr = MEM_WB_alu_out;
+    assign o_retire_dmem_addr = MEM_WB_dmem_addr;
     assign o_retire_dmem_ren = MEM_WB_c_mem_read;
     assign o_retire_dmem_wen = MEM_WB_c_mem_write;
     assign o_retire_dmem_mask = MEM_WB_dmem_mask;
@@ -585,7 +586,14 @@ module hart #(
                 MEM_WB_rs2_raddr,
                 MEM_WB_rs1_data,
                 MEM_WB_rs2_data,
-                MEM_WB_c_halted} <= 0;
+                MEM_WB_c_halted,
+                MEM_WB_c_mem_read,
+                MEM_WB_c_mem_write,
+                MEM_WB_dmem_mask,
+                MEM_WB_dmem_rdata,
+                MEM_WB_dmem_addr,
+                MEM_WB_dmem_rdata_aligned,
+                MEM_WB_dmem_wdata_aligned} <= 0;
         end else begin
             MEM_WB_mem_out <= o_dmem_wdata;
             MEM_WB_imm <= EX_MEM_imm;
@@ -608,6 +616,7 @@ module hart #(
             MEM_WB_c_mem_write <= EX_MEM_c_mem_write;
             MEM_WB_dmem_mask <= o_dmem_mask;
             MEM_WB_dmem_rdata <= i_dmem_rdata;
+            MEM_WB_dmem_addr <= o_dmem_addr;
             MEM_WB_dmem_rdata_aligned <= dmem_rdata_aligned;
             MEM_WB_dmem_wdata_aligned <= o_dmem_wdata;
         end
