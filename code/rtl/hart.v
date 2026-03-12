@@ -466,7 +466,6 @@ module hart #(
         .i_sub(ID_EX_c_sub),
         .i_arith(ID_EX_c_arith),
         .i_unsigned(ID_EX_c_unsigned),
-        .i_is_jalr(ID_EX_c_is_jalr),
         .alu_out(alu_out),
         .eq(eq),
         .slt(slt)
