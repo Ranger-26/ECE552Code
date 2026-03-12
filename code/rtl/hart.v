@@ -385,8 +385,8 @@ module hart #(
         .i_rst(i_rst),
         .i_rs1_raddr(rs1),
         .i_rs2_raddr(rs2),
-        .i_rd_wen(c_reg_write),
-        .i_rd_waddr(rd),
+        .i_rd_wen(MEM_WB_c_reg_write),
+        .i_rd_waddr(MEM_WB_write_reg),
         .i_rd_wdata(reg_write_data),
         .o_rs1_rdata(rs1_data),
         .o_rs2_rdata(rs2_data)
@@ -509,7 +509,7 @@ module hart #(
             // FOR TB
             EX_MEM_valid <= ID_EX_valid;
             EX_MEM_instruction <= ID_EX_instruction;
-            EX_MEM_next_pc <= 0; // TODO next_pc logic
+            EX_MEM_next_pc <= ID_EX_next_pc;
             EX_MEM_curr_pc <= ID_EX_curr_pc;
             EX_MEM_rs1_raddr <= ID_EX_rs1_raddr;
             EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
