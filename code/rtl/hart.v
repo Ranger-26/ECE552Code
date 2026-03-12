@@ -342,7 +342,7 @@ module hart #(
     hazard_detector hazard_detector_state(
         .IF_ID_rs1(IF_ID_rs1),
         .IF_ID_rs2(IF_ID_rs2),
-        .ID_format(format),
+        .ID_format(IF_ID_format),
         .EX_format(ID_EX_format),
         .ID_EX_write_reg(ID_EX_write_reg),
         .EX_MEM_write_reg(EX_MEM_write_reg),
