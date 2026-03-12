@@ -177,6 +177,7 @@ module hart #(
 
     //fetch output signals
     wire [31:0] PC;
+    // wire [31:0] pc_plus4;
 
     //decode output signals
     wire [4:0] rd;
@@ -191,11 +192,13 @@ module hart #(
     // Pipeline Registers
     // IF/ID
     reg [31:0] IF_ID_curr_pc;
+    // reg [31:0] IF_ID_pc_plus4;
     reg [31:0] IF_ID_instruction;
     wire [5:0] IF_ID_format;
     wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
     wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
+    reg IF_ID_valid;
     // ID/EX
     reg [31:0] ID_EX_rs1_data;
     reg [31:0] ID_EX_rs2_data;
@@ -217,6 +220,7 @@ module hart #(
     reg ID_EX_c_sub;
     reg ID_EX_c_arith;
     reg ID_EX_c_unsigned;
+    reg ID_EX_valid;
     // EX/MEM
     reg [31:0] EX_MEM_alu_out;
     reg [31:0] EX_MEM_rs2_data;
@@ -229,6 +233,8 @@ module hart #(
     reg EX_MEM_c_reg_write;
     reg [1:0] EX_MEM_c_write_sel;
     reg [1:0] EX_MEM_c_mem_size;
+    reg EX_MEM_valid;
+
     // MEM/WB
     reg [31:0] MEM_WB_mem_out;
     reg [31:0] MEM_WB_imm;
@@ -236,13 +242,15 @@ module hart #(
     reg [31:0] MEM_WB_alu_out;
     reg [4:0] MEM_WB_write_reg;
     reg [1:0] MEM_WB_c_write_sel;
-
     reg MEM_WB_c_reg_write;
+    reg MEM_WB_valid;
+
+
 
     
     //assigning signals for outputs
-    assign o_retire_valid = 1; // wrong, needs to be in an always block?
-    assign o_retire_inst = i_imem_rdata;
+    assign o_retire_valid = MEM_WB_valid;
+    assign o_retire_inst = IF_ID_instruction;
     assign o_imem_raddr = PC;
     assign o_retire_pc = PC;
     assign o_retire_rs1_raddr = rs1;
@@ -250,8 +258,8 @@ module hart #(
     assign o_retire_rd_waddr = c_reg_write ? rd : 5'd0; // if not writing to a register, set to 0
     assign o_retire_trap = 0;
     assign o_retire_halt = c_halted;
-    assign o_retire_rs1_rdata = rs1_data;
-    assign o_retire_rs2_rdata = rs2_data;
+    assign o_retire_rs1_rdata = ID_EX_rs1_data;
+    assign o_retire_rs2_rdata = ID_EX_rs2_data;
     assign o_retire_rd_wdata = reg_write_data;
     assign o_dmem_addr = {alu_out[31:2], 2'b00}; // align to word boundary
     assign o_dmem_wen = c_mem_write;
@@ -298,16 +306,24 @@ module hart #(
         .i_is_jal_r(c_is_jal_r),
         .i_halted(c_halted),
         .o_PC(PC),
+        // .o_pc_plus4(pc_plus4),
         .o_nxt_pc(o_retire_next_pc),
         .o_itype(IF_ID_format)
     );
 
     //pipeline register logic for IF/ID
     always @(posedge i_clk) begin
-        IF_ID_instruction <= i_imem_rdata;
-        IF_ID_curr_pc <= PC;
+        if (i_rst) begin
+            {IF_ID_valid, IF_ID_instruction, IF_ID_curr_pc} <= 0;
+        end else begin 
+            IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
+            IF_ID_instruction <= i_imem_rdata;
+            // IF_ID_pc_plus4 <= pc_plus4;
+            IF_ID_curr_pc <= PC;
+        end
     end
     
+    //assign IF_ID_valid
 
     //decode
     decode decode_state(
@@ -337,27 +353,33 @@ module hart #(
 
        //pipeline register logic for ID/EX
     always @(posedge i_clk) begin
-        ID_EX_rs1_data <= rs1_data;
-        ID_EX_rs2_data <= rs2_data;
-        ID_EX_imm <= imm_sext;
-        ID_EX_curr_pc <= IF_ID_curr_pc;
-        //Next PC?
-        ID_EX_next_pc <= IF_ID_curr_pc + 4;
-        ID_EX_write_reg <= rd;
-        ID_EX_opcode <= IF_ID_instruction[6:0];
-        ID_EX_funct3 <= IF_ID_instruction[14:12];
-        ID_EX_c_is_jal_r <= c_is_jal_r;
-        ID_EX_c_use_pc_reg <= c_use_pc_reg;
-        ID_EX_c_mem_write <= c_mem_write;
-        ID_EX_c_mem_read <= c_mem_read;
-        ID_EX_c_reg_write <= c_reg_write;
-        ID_EX_c_mem_size <= c_mem_size;
-        ID_EX_c_write_sel <= c_write_sel;
-        ID_EX_c_alu_op <= c_alu_op;
-        ID_EX_c_use_imm <= c_use_imm;
-        ID_EX_c_sub <= c_i_sub;
-        ID_EX_c_arith <= c_i_arith;
-        ID_EX_c_unsigned <= c_i_unsigned;
+        if (i_rst) begin
+            {ID_EX_valid, ID_EX_rs1_data, ID_EX_rs2_data, ID_EX_imm, ID_EX_curr_pc, ID_EX_next_pc, ID_EX_write_reg, ID_EX_opcode, ID_EX_funct3, ID_EX_c_is_jal_r, ID_EX_c_use_pc_reg, ID_EX_c_mem_write, ID_EX_c_mem_read, ID_EX_c_reg_write, ID_EX_c_mem_size, ID_EX_c_write_sel, ID_EX_c_alu_op, ID_EX_c_use_imm, ID_EX_c_sub, ID_EX_c_arith, ID_EX_c_unsigned} <= 0;
+        end else begin
+            ID_EX_rs1_data <= rs1_data;
+            ID_EX_rs2_data <= rs2_data;
+            ID_EX_imm <= imm_sext;
+            ID_EX_curr_pc <= IF_ID_curr_pc;
+            //Next PC?
+            ID_EX_next_pc <= IF_ID_curr_pc + 4;
+            ID_EX_write_reg <= rd;
+            ID_EX_opcode <= IF_ID_instruction[6:0];
+            ID_EX_funct3 <= IF_ID_instruction[14:12];
+            ID_EX_c_is_jal_r <= c_is_jal_r;
+            ID_EX_c_use_pc_reg <= c_use_pc_reg;
+            ID_EX_c_mem_write <= c_mem_write;
+            ID_EX_c_mem_read <= c_mem_read;
+            ID_EX_c_reg_write <= c_reg_write;
+            ID_EX_c_mem_size <= c_mem_size;
+            ID_EX_c_write_sel <= c_write_sel;
+            ID_EX_c_alu_op <= c_alu_op;
+            ID_EX_c_use_imm <= c_use_imm;
+            ID_EX_c_sub <= c_i_sub;
+            ID_EX_c_arith <= c_i_arith;
+            ID_EX_c_unsigned <= c_i_unsigned;
+            ID_EX_valid <= IF_ID_valid; 
+        end
+
     end
 
     //execute stage
@@ -381,17 +403,22 @@ module hart #(
     
     //EX/MEM pipeline register logic
     always @(posedge i_clk) begin
-        EX_MEM_alu_out <= alu_out;
-        EX_MEM_rs2_data <= ID_EX_rs2_data;
-        EX_MEM_imm <= ID_EX_imm;
-        EX_MEM_next_pc <= ID_EX_next_pc;
-        EX_MEM_write_reg <= ID_EX_write_reg;
-        EX_MEM_c_unsigned <= ID_EX_c_unsigned;
-        EX_MEM_c_mem_write <= ID_EX_c_mem_write;
-        EX_MEM_c_mem_read <= ID_EX_c_mem_read;
-        EX_MEM_c_reg_write <= ID_EX_c_reg_write;
-        EX_MEM_c_write_sel <= ID_EX_c_write_sel;
-        EX_MEM_c_mem_size <= ID_EX_c_mem_size;
+        if (i_rst) begin
+            {EX_MEM_valid, EX_MEM_alu_out, EX_MEM_rs2_data, EX_MEM_imm, EX_MEM_next_pc, EX_MEM_write_reg, EX_MEM_c_unsigned, EX_MEM_c_mem_write, EX_MEM_c_mem_read, EX_MEM_c_reg_write, EX_MEM_c_write_sel, EX_MEM_c_mem_size} <= 0;
+        end else begin
+            EX_MEM_alu_out <= alu_out;
+            EX_MEM_rs2_data <= ID_EX_rs2_data;
+            EX_MEM_imm <= ID_EX_imm;
+            EX_MEM_next_pc <= ID_EX_next_pc;
+            EX_MEM_write_reg <= ID_EX_write_reg;
+            EX_MEM_c_unsigned <= ID_EX_c_unsigned;
+            EX_MEM_c_mem_write <= ID_EX_c_mem_write;
+            EX_MEM_c_mem_read <= ID_EX_c_mem_read;
+            EX_MEM_c_reg_write <= ID_EX_c_reg_write;
+            EX_MEM_c_write_sel <= ID_EX_c_write_sel;
+            EX_MEM_c_mem_size <= ID_EX_c_mem_size;
+            EX_MEM_valid <= ID_EX_valid;
+        end
     end
 
     dmem_mask mem_mask_unit(
@@ -415,13 +442,18 @@ module hart #(
 
     //MEM/WB pipeline register logic
     always @(posedge i_clk) begin
-        MEM_WB_mem_out <= o_dmem_wdata;
-        MEM_WB_imm <= EX_MEM_imm;
-        MEM_WB_next_pc <= EX_MEM_next_pc;
-        MEM_WB_alu_out <= EX_MEM_alu_out;
-        MEM_WB_write_reg <= EX_MEM_write_reg;
-        MEM_WB_c_write_sel <= EX_MEM_c_write_sel;
-        MEM_WB_c_reg_write <= EX_MEM_c_reg_write;
+        if (i_rst) begin
+            {MEM_WB_valid, MEM_WB_mem_out, MEM_WB_imm, MEM_WB_next_pc, MEM_WB_alu_out, MEM_WB_write_reg, MEM_WB_c_write_sel, MEM_WB_c_reg_write} <= 0;
+        end else begin
+            MEM_WB_mem_out <= o_dmem_wdata;
+            MEM_WB_imm <= EX_MEM_imm;
+            MEM_WB_next_pc <= EX_MEM_next_pc;
+            MEM_WB_alu_out <= EX_MEM_alu_out;
+            MEM_WB_write_reg <= EX_MEM_write_reg;
+            MEM_WB_c_write_sel <= EX_MEM_c_write_sel;
+            MEM_WB_c_reg_write <= EX_MEM_c_reg_write;
+            MEM_WB_valid <= EX_MEM_valid;
+        end
     end
 
     //writeback stage - TODO: move to own module
