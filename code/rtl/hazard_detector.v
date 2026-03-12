@@ -13,7 +13,7 @@ module hazard_detector (
   input wire c_is_jalr,
   input wire ID_EX_c_is_jalr,
   output wire stall_pc,
-  output wire flush_IF_ID,
+  output wire flush_IF_ID
 );
   localparam R_TYPE = 6'b000001;
   localparam B_TYPE = 6'b001000;

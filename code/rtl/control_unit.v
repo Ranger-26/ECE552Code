@@ -4,6 +4,8 @@ module control_unit (
     input wire _eq,
     input wire _slt,
     input wire [31:0] _instruction,
+    input wire [6:0] ID_EX_opcode,
+    input wire [2:0] ID_EX_funct3,
     output wire c_halted, // done
     output wire c_is_jalr, // done
     output wire c_use_pc_reg, // done
@@ -49,8 +51,8 @@ module control_unit (
     assign c_i_unsigned = ((opcode == BRANCH) & funct3[1]) | ((opcode == LOAD) & funct3[2]) | (funct3 == 3'b011); // last term for R/I types
     
     // THIS SIGNAL ONLY IS FROM EX STAGE
-    assign c_pc_mod = (opcode == JAL) | ((opcode == BRANCH) & // jal or B type
-        (funct3[0] ^ (funct3[2] ? _slt : _eq))); // Convenient logic (since funct3[1] never matters for CU, ALU uses it)
+    assign c_pc_mod = (ID_EX_opcode == JAL) | ((ID_EX_opcode == BRANCH) & // jal or B type
+        (ID_EX_funct3[0] ^ (ID_EX_funct3[2] ? _slt : _eq))); // Convenient logic (since funct3[1] never matters for CU, ALU uses it)
 
     assign c_i_sub = (opcode == R_ARITH) & funct7[5];
     assign c_i_arith = funct7[5];

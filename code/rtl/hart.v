@@ -1,6 +1,5 @@
 `default_nettype none
 
-
 module hart #(
     // After reset, the program counter (PC) should be initialized to this
     // address and start executing instructions from there.
@@ -143,8 +142,6 @@ module hart #(
     ,`RVFI_OUTPUTS,
 `endif
 );
-    // Fill in your implementation here.
-    
     //ALU Output signals
     wire eq;
     wire slt;
@@ -201,7 +198,6 @@ module hart #(
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
     // FOR TB ONLY
     reg IF_ID_valid;
-    reg [31:0] IF_ID_next_pc;
 
     // ID/EX
     reg [31:0] ID_EX_rs1_data;
@@ -228,7 +224,6 @@ module hart #(
     // FOR TB ONLY
     reg ID_EX_valid;
     reg [31:0] ID_EX_instruction;
-    reg [31:0] ID_EX_next_pc;
     reg [4:0] ID_EX_rs1_raddr;
     reg [4:0] ID_EX_rs2_raddr;
     reg ID_EX_c_halted;
@@ -273,6 +268,10 @@ module hart #(
     reg [31:0] MEM_WB_rs1_data;
     reg [31:0] MEM_WB_rs2_data;
     reg MEM_WB_c_halted;
+    reg MEM_WB_c_mem_read;
+    reg MEM_WB_c_mem_write;
+    reg [3:0] MEM_WB_dmem_mask;
+    reg [31:0] MEM_WB_dmem_rdata;
 
     // EFFECTIVE HALT
     wire effective_halted = c_halted | ID_EX_c_halted;
@@ -297,12 +296,12 @@ module hart #(
     assign o_retire_rs2_rdata = MEM_WB_rs2_data;
     assign o_retire_halt = MEM_WB_c_halted;
     assign o_retire_rd_wdata = reg_write_data;
-    assign o_retire_dmem_addr = EX_MEM_alu_out;
-    assign o_retire_dmem_ren = EX_MEM_c_mem_read;
-    assign o_retire_dmem_wen = EX_MEM_c_mem_write;
-    assign o_retire_dmem_mask = o_dmem_mask;
-    assign o_retire_dmem_wdata = EX_MEM_rs2_data;
-    assign o_retire_dmem_rdata = dmem_rdata_aligned;
+    assign o_retire_dmem_addr = MEM_WB_alu_out;
+    assign o_retire_dmem_ren = MEM_WB_c_mem_read;
+    assign o_retire_dmem_wen = MEM_WB_c_mem_write;
+    assign o_retire_dmem_mask = MEM_WB_dmem_mask;
+    assign o_retire_dmem_wdata = MEM_WB_rs2_data;
+    assign o_retire_dmem_rdata = MEM_WB_dmem_rdata;
 
     // memory interfaces
     assign o_imem_raddr = PC;
@@ -320,6 +319,8 @@ module hart #(
         ._eq(eq),
         ._slt(slt),
         ._instruction(IF_ID_instruction),
+        .ID_EX_opcode(ID_EX_opcode),
+        .ID_EX_funct3(ID_EX_funct3),
         .c_halted(c_halted),
         .c_is_jalr(c_is_jalr),
         .c_use_pc_reg(c_use_pc_reg),
@@ -379,7 +380,6 @@ module hart #(
             IF_ID_instruction <= i_imem_rdata;
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
-            IF_ID_next_pc <= next_pc;
             IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
         end
     end
@@ -405,8 +405,8 @@ module hart #(
         .i_rst(i_rst),
         .i_rs1_raddr(rs1),
         .i_rs2_raddr(rs2),
-        .i_rd_wen(c_reg_write),
-        .i_rd_waddr(rd),
+        .i_rd_wen(MEM_WB_c_reg_write),
+        .i_rd_waddr(MEM_WB_write_reg),
         .i_rd_wdata(reg_write_data),
         .o_rs1_rdata(rs1_data),
         .o_rs2_rdata(rs2_data)
@@ -469,7 +469,6 @@ module hart #(
             ID_EX_rs2_raddr <= rs2;
             if (c_halted) ID_EX_c_halted <= 1; // Once halted, stay halted until reset
         end
-
     end
 
     //execute stage
@@ -528,7 +527,7 @@ module hart #(
             // FOR TB
             EX_MEM_valid <= ID_EX_valid;
             EX_MEM_instruction <= ID_EX_instruction;
-            EX_MEM_next_pc <= 0; // TODO next_pc logic
+            EX_MEM_next_pc <= (EX_MEM_c_is_jalr | c_pc_mod) ? IF_ID_next_pc : IF_ID_pc_plus4;
             EX_MEM_curr_pc <= ID_EX_curr_pc;
             EX_MEM_rs1_raddr <= ID_EX_rs1_raddr;
             EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
@@ -594,6 +593,10 @@ module hart #(
             MEM_WB_rs1_data <= EX_MEM_rs1_data;
             MEM_WB_rs2_data <= EX_MEM_rs2_data;
             MEM_WB_c_halted <= EX_MEM_c_halted;
+            MEM_WB_c_mem_read <= EX_MEM_c_mem_read;
+            MEM_WB_c_mem_write <= EX_MEM_c_mem_write;
+            MEM_WB_dmem_mask <= o_dmem_mask;
+            MEM_WB_dmem_rdata <= i_dmem_rdata;
         end
     end
 
