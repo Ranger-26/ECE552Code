@@ -415,7 +415,8 @@ module hart #(
     //pipeline register logic for ID/EX
     always @(posedge i_clk) begin
         if (i_rst) begin
-            {ID_EX_rs1_data,
+            {ID_EX_format,
+                ID_EX_rs1_data,
                 ID_EX_rs2_data,
                 ID_EX_imm,
                 ID_EX_curr_pc,
@@ -442,6 +443,7 @@ module hart #(
                 ID_EX_rs2_raddr,
                 ID_EX_c_halted} <= 0;
         end else begin
+            ID_EX_format <= format;
             ID_EX_rs1_data <= rs1_data;
             ID_EX_rs2_data <= rs2_data;
             ID_EX_imm <= imm_sext;
