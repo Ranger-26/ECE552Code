@@ -13,6 +13,7 @@ module hazard_detector (
   input wire c_is_jalr,
   input wire ID_EX_c_is_jalr,
   output wire stall_pc,
+  output wire flush_IF_ID,
   output wire flush_IF_ID
 );
   localparam R_TYPE = 6'b000001;
@@ -25,7 +26,8 @@ module hazard_detector (
   wire adjacent_hazard = ((IF_ID_rs1 == ID_EX_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == ID_EX_write_reg) & (ID_format == R_TYPE) & (IF_ID_rs2 != 0));
   wire separated_hazard = ((IF_ID_rs1 == EX_MEM_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == EX_MEM_write_reg) & (ID_format == R_TYPE) & (IF_ID_rs2 != 0));
 
-  assign flush_IF_ID = (adjacent_hazard | separated_hazard | (ID_format == B_TYPE));
+  assign flush_IF_ID = ID_control_flow; // stall fetch -> nop into decode (IF/ID reg)
+  assign flush_ID_EX = adjacent_hazard | separated_hazard; // stall decode -> nop into execute (ID/EX reg)
   assign stall_pc = flush_IF_ID;
 endmodule
 

@@ -279,10 +279,12 @@ module hart #(
 
     // stall signals
     wire flush_IF_ID;
+    wire flush_ID_EX;
     wire stall_pc;
  
     // pipeline reg resets
     wire rst_IF_ID = i_rst | effective_halted | flush_IF_ID;
+    wire rst_ID_EX = i_rst | flush_ID_EX;
 
     // retires
     assign o_retire_valid = MEM_WB_valid;
@@ -349,7 +351,8 @@ module hart #(
         .c_is_jalr(c_is_jalr),
         .ID_EX_c_is_jalr(ID_EX_c_is_jalr),
         .stall_pc(stall_pc),
-        .flush_IF_ID(flush_IF_ID)
+        .flush_IF_ID(flush_IF_ID),
+        .flush_ID_EX(flush_ID_EX)
     );
 
     
@@ -418,7 +421,7 @@ module hart #(
 
     //pipeline register logic for ID/EX
     always @(posedge i_clk) begin
-        if (i_rst) begin
+        if (rst_ID_EX) begin
             {ID_EX_format,
                 ID_EX_rs1_data,
                 ID_EX_rs2_data,
