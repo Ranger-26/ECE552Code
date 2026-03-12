@@ -163,6 +163,7 @@ module hart #(
     wire c_i_arith; 
     wire c_i_unsigned;
 
+    wire [5:0] format;
     
     wire [31:0] branch_target_addr;
     wire [31:0] jalr_target_addr;
@@ -192,7 +193,7 @@ module hart #(
     reg [31:0] IF_ID_curr_pc;
     reg [31:0] IF_ID_pc_plus4;
     reg [31:0] IF_ID_instruction;
-    wire [5:0] format;
+    reg [5:0] IF_ID_format;
     wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
     wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
@@ -375,11 +376,13 @@ module hart #(
             {IF_ID_curr_pc,
                 IF_ID_instruction,
                 IF_ID_pc_plus4,
+                IF_ID_format,
                 IF_ID_valid} <= 0;
         end else begin 
             IF_ID_instruction <= i_imem_rdata;
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
+            IF_ID_format <= format;
             IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
         end
     end
@@ -391,6 +394,7 @@ module hart #(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_instruction(IF_ID_instruction),
+        .i_format(IF_ID_format),
         .o_rd(rd),
         .o_rs1(rs1),
         .o_rs2(rs2),
@@ -443,7 +447,7 @@ module hart #(
                 ID_EX_rs2_raddr,
                 ID_EX_c_halted} <= 0;
         end else begin
-            ID_EX_format <= format;
+            ID_EX_format <= IF_ID_format;
             ID_EX_rs1_data <= rs1_data;
             ID_EX_rs2_data <= rs2_data;
             ID_EX_imm <= imm_sext;

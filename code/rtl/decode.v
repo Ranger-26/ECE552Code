@@ -5,6 +5,7 @@ module decode (
     input wire i_clk,
     input wire i_rst,
     input wire [31:0] i_instruction,
+    input wire [5:0] i_format,
     output wire [4:0] o_rd,
     output wire [4:0] o_rs1,
     output wire [4:0] o_rs2,
@@ -13,14 +14,9 @@ module decode (
 
     wire [5:0] itype;
 
-    i_format_encoder encoder (
-        .opcode(i_instruction[6:0]),
-        .itype(itype)
-    );
-
     imm imm_gen (
         .i_inst(i_instruction),
-        .i_format(itype),
+        .i_format(i_format),
         .o_immediate(o_imm_sext)
     );
 
