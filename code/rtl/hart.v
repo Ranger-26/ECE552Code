@@ -166,8 +166,6 @@ module hart #(
     wire c_i_arith; 
     wire c_i_unsigned;
 
-    wire effective_halted = c_halted | EX_MEM_c_halted;
-
     
     wire [31:0] branch_target_addr;
     wire [31:0] jalr_target_addr;
@@ -251,7 +249,6 @@ module hart #(
     reg [4:0] EX_MEM_rs1_raddr;
     reg [4:0] EX_MEM_rs2_raddr;
     reg [31:0] EX_MEM_rs1_data;
-    reg [31:0] EX_MEM_rs2_data;
     reg EX_MEM_c_halted;
 
     // MEM/WB
@@ -273,6 +270,8 @@ module hart #(
     reg [31:0] MEM_WB_rs2_data;
     reg MEM_WB_c_halted;
 
+    // EFFECTIVE HALT
+    wire effective_halted = c_halted | ID_EX_c_halted;
     
     // retires
     assign o_retire_valid = MEM_WB_valid;
