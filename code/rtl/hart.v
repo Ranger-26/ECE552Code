@@ -164,7 +164,9 @@ module hart #(
     wire c_use_imm; 
     wire c_i_sub; 
     wire c_i_arith; 
-    wire c_i_unsigned; 
+    wire c_i_unsigned;
+
+    wire effective_halted = c_halted | EX_MEM_c_halted;
 
     
     wire [31:0] branch_target_addr;
@@ -192,18 +194,20 @@ module hart #(
     // Pipeline Registers
     // IF/ID
     reg [31:0] IF_ID_curr_pc;
-    // reg [31:0] IF_ID_pc_plus4;
+    reg [31:0] IF_ID_pc_plus4;
     reg [31:0] IF_ID_instruction;
     wire [5:0] IF_ID_format;
     wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
     wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
+    // FOR TB ONLY
     reg IF_ID_valid;
+
     // ID/EX
     reg [31:0] ID_EX_rs1_data;
     reg [31:0] ID_EX_rs2_data;
     reg [31:0] ID_EX_imm;
-    reg [31:0] ID_EX_next_pc;
+    reg [31:0] ID_EX_pc_plus4;
     reg [31:0] ID_EX_curr_pc;
     reg [4:0] ID_EX_write_reg;
     reg [6:0] ID_EX_opcode;
@@ -220,12 +224,18 @@ module hart #(
     reg ID_EX_c_sub;
     reg ID_EX_c_arith;
     reg ID_EX_c_unsigned;
+    // FOR TB ONLY
     reg ID_EX_valid;
+    reg [31:0] ID_EX_instruction;
+    reg [4:0] ID_EX_rs1_raddr;
+    reg [4:0] ID_EX_rs2_raddr;
+    reg ID_EX_c_halted;
+
     // EX/MEM
     reg [31:0] EX_MEM_alu_out;
     reg [31:0] EX_MEM_rs2_data;
     reg [31:0] EX_MEM_imm;
-    reg [31:0] EX_MEM_next_pc;
+    reg [31:0] EX_MEM_pc_plus4;
     reg [4:0] EX_MEM_write_reg;
     reg EX_MEM_c_unsigned;
     reg EX_MEM_c_mem_write;
@@ -233,40 +243,65 @@ module hart #(
     reg EX_MEM_c_reg_write;
     reg [1:0] EX_MEM_c_write_sel;
     reg [1:0] EX_MEM_c_mem_size;
+    // FOR TB ONLY
     reg EX_MEM_valid;
+    reg [31:0] EX_MEM_instruction;
+    reg [31:0] EX_MEM_next_pc;
+    reg [31:0] EX_MEM_curr_pc;
+    reg [4:0] EX_MEM_rs1_raddr;
+    reg [4:0] EX_MEM_rs2_raddr;
+    reg [31:0] EX_MEM_rs1_data;
+    reg [31:0] EX_MEM_rs2_data;
+    reg EX_MEM_c_halted;
 
     // MEM/WB
     reg [31:0] MEM_WB_mem_out;
     reg [31:0] MEM_WB_imm;
-    reg [31:0] MEM_WB_next_pc;
+    reg [31:0] MEM_WB_pc_plus4;
     reg [31:0] MEM_WB_alu_out;
     reg [4:0] MEM_WB_write_reg;
     reg [1:0] MEM_WB_c_write_sel;
     reg MEM_WB_c_reg_write;
+    // FOR TB ONLY
     reg MEM_WB_valid;
-
-
+    reg [31:0] MEM_WB_instruction;
+    reg [31:0] MEM_WB_next_pc;
+    reg [31:0] MEM_WB_curr_pc;
+    reg [4:0] MEM_WB_rs1_raddr;
+    reg [4:0] MEM_WB_rs2_raddr;
+    reg [31:0] MEM_WB_rs1_data;
+    reg [31:0] MEM_WB_rs2_data;
+    reg MEM_WB_c_halted;
 
     
-    //assigning signals for outputs
+    // retires
     assign o_retire_valid = MEM_WB_valid;
-    assign o_retire_inst = IF_ID_instruction;
-    assign o_imem_raddr = PC;
-    assign o_retire_pc = PC;
-    assign o_retire_rs1_raddr = rs1;
-    assign o_retire_rs2_raddr = rs2;
-    assign o_retire_rd_waddr = c_reg_write ? rd : 5'd0; // if not writing to a register, set to 0
+    assign o_retire_inst = MEM_WB_instruction;
+    assign o_retire_next_pc = MEM_WB_next_pc;
+    assign o_retire_pc = MEM_WB_curr_pc;
+    assign o_retire_rs1_raddr = MEM_WB_rs1_raddr;
+    assign o_retire_rs2_raddr = MEM_WB_rs2_raddr;
+    assign o_retire_rd_waddr = MEM_WB_c_reg_write ? MEM_WB_write_reg : 5'd0; // if not writing to a register, set to 0
     assign o_retire_trap = 0;
-    assign o_retire_halt = c_halted;
-    assign o_retire_rs1_rdata = ID_EX_rs1_data;
-    assign o_retire_rs2_rdata = ID_EX_rs2_data;
+    assign o_retire_rs1_rdata = MEM_WB_rs1_data;
+    assign o_retire_rs2_rdata = MEM_WB_rs2_data;
+    assign o_retire_halt = MEM_WB_c_halted;
     assign o_retire_rd_wdata = reg_write_data;
-    assign o_dmem_addr = {alu_out[31:2], 2'b00}; // align to word boundary
-    assign o_dmem_wen = c_mem_write;
-    assign o_dmem_ren = c_mem_read;
+    assign o_retire_dmem_addr = EX_MEM_alu_out;
+    assign o_retire_dmem_ren = EX_MEM_c_mem_read;
+    assign o_retire_dmem_wen = EX_MEM_c_mem_write;
+    assign o_retire_dmem_mask = o_dmem_mask;
+    assign o_retire_dmem_wdata = EX_MEM_rs2_data;
+    assign o_retire_dmem_rdata = dmem_rdata_aligned;
+
+    // memory interfaces
+    assign o_imem_raddr = PC;
+    assign o_dmem_addr = {EX_MEM_alu_out[31:2], 2'b00}; // align to word boundary
+    assign o_dmem_wen = EX_MEM_c_mem_write;
+    assign o_dmem_ren = EX_MEM_c_mem_read;
 
 
-    assign branch_target_addr = PC + imm_sext;
+    assign branch_target_addr = ID_EX_curr_pc + ID_EX_imm;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
 
 
@@ -304,17 +339,18 @@ module hart #(
         .i_branch_target_addr(branch_target_addr),
         .i_jalr_target_addr(jalr_target_addr),
         .i_is_jal_r(c_is_jal_r),
-        .i_halted(c_halted),
+        .i_halted(effective_halted),
         .o_PC(PC),
         // .o_pc_plus4(pc_plus4),
-        .o_nxt_pc(o_retire_next_pc),
         .o_itype(IF_ID_format)
     );
 
     //pipeline register logic for IF/ID
     always @(posedge i_clk) begin
-        if (i_rst) begin
-            {IF_ID_valid, IF_ID_instruction, IF_ID_curr_pc} <= 0;
+        if (i_rst | effective_halted) begin
+            {IF_ID_curr_pc,
+                IF_ID_instruction,
+                IF_ID_valid} <= 0;
         end else begin 
             IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
             IF_ID_instruction <= i_imem_rdata;
@@ -351,17 +387,41 @@ module hart #(
         .o_rs2_rdata(rs2_data)
     );
 
-       //pipeline register logic for ID/EX
+    //pipeline register logic for ID/EX
     always @(posedge i_clk) begin
         if (i_rst) begin
-            {ID_EX_valid, ID_EX_rs1_data, ID_EX_rs2_data, ID_EX_imm, ID_EX_curr_pc, ID_EX_next_pc, ID_EX_write_reg, ID_EX_opcode, ID_EX_funct3, ID_EX_c_is_jal_r, ID_EX_c_use_pc_reg, ID_EX_c_mem_write, ID_EX_c_mem_read, ID_EX_c_reg_write, ID_EX_c_mem_size, ID_EX_c_write_sel, ID_EX_c_alu_op, ID_EX_c_use_imm, ID_EX_c_sub, ID_EX_c_arith, ID_EX_c_unsigned} <= 0;
+            {ID_EX_rs1_data,
+                ID_EX_rs2_data,
+                ID_EX_imm,
+                ID_EX_curr_pc,
+                ID_EX_pc_plus4,
+                ID_EX_write_reg,
+                ID_EX_opcode,
+                ID_EX_funct3,
+                ID_EX_c_is_jal_r,
+                ID_EX_c_use_pc_reg,
+                ID_EX_c_mem_write,
+                ID_EX_c_mem_read,
+                ID_EX_c_reg_write,
+                ID_EX_c_mem_size,
+                ID_EX_c_write_sel,
+                ID_EX_c_alu_op,
+                ID_EX_c_use_imm,
+                ID_EX_c_sub,
+                ID_EX_c_arith,
+                ID_EX_c_unsigned,
+                // FOR TB
+                ID_EX_valid,
+                ID_EX_instruction,
+                ID_EX_rs1_raddr,
+                ID_EX_rs2_raddr,
+                ID_EX_c_halted} <= 0;
         end else begin
             ID_EX_rs1_data <= rs1_data;
             ID_EX_rs2_data <= rs2_data;
             ID_EX_imm <= imm_sext;
             ID_EX_curr_pc <= IF_ID_curr_pc;
-            //Next PC?
-            ID_EX_next_pc <= IF_ID_curr_pc + 4;
+            ID_EX_pc_plus4 <= IF_ID_curr_pc + 4;
             ID_EX_write_reg <= rd;
             ID_EX_opcode <= IF_ID_instruction[6:0];
             ID_EX_funct3 <= IF_ID_instruction[14:12];
@@ -377,7 +437,12 @@ module hart #(
             ID_EX_c_sub <= c_i_sub;
             ID_EX_c_arith <= c_i_arith;
             ID_EX_c_unsigned <= c_i_unsigned;
-            ID_EX_valid <= IF_ID_valid; 
+            // FOR TB
+            ID_EX_valid <= IF_ID_valid;
+            ID_EX_instruction <= IF_ID_instruction;
+            ID_EX_rs1_raddr <= rs1;
+            ID_EX_rs2_raddr <= rs2;
+            if (c_halted) ID_EX_c_halted <= 1; // Once halted, stay halted until reset
         end
 
     end
@@ -404,12 +469,31 @@ module hart #(
     //EX/MEM pipeline register logic
     always @(posedge i_clk) begin
         if (i_rst) begin
-            {EX_MEM_valid, EX_MEM_alu_out, EX_MEM_rs2_data, EX_MEM_imm, EX_MEM_next_pc, EX_MEM_write_reg, EX_MEM_c_unsigned, EX_MEM_c_mem_write, EX_MEM_c_mem_read, EX_MEM_c_reg_write, EX_MEM_c_write_sel, EX_MEM_c_mem_size} <= 0;
+            {EX_MEM_alu_out,
+                EX_MEM_rs2_data,
+                EX_MEM_imm,
+                EX_MEM_pc_plus4,
+                EX_MEM_write_reg,
+                EX_MEM_c_unsigned,
+                EX_MEM_c_mem_write,
+                EX_MEM_c_mem_read,
+                EX_MEM_c_reg_write,
+                EX_MEM_c_write_sel,
+                EX_MEM_c_mem_size,
+                // FOR TB
+                EX_MEM_valid,
+                EX_MEM_instruction,
+                EX_MEM_next_pc,
+                EX_MEM_curr_pc,
+                EX_MEM_rs1_raddr,
+                EX_MEM_rs2_raddr,
+                EX_MEM_rs1_data,
+                EX_MEM_c_halted} <= 0;
         end else begin
             EX_MEM_alu_out <= alu_out;
             EX_MEM_rs2_data <= ID_EX_rs2_data;
             EX_MEM_imm <= ID_EX_imm;
-            EX_MEM_next_pc <= ID_EX_next_pc;
+            EX_MEM_pc_plus4 <= ID_EX_pc_plus4;
             EX_MEM_write_reg <= ID_EX_write_reg;
             EX_MEM_c_unsigned <= ID_EX_c_unsigned;
             EX_MEM_c_mem_write <= ID_EX_c_mem_write;
@@ -417,7 +501,15 @@ module hart #(
             EX_MEM_c_reg_write <= ID_EX_c_reg_write;
             EX_MEM_c_write_sel <= ID_EX_c_write_sel;
             EX_MEM_c_mem_size <= ID_EX_c_mem_size;
+            // FOR TB
             EX_MEM_valid <= ID_EX_valid;
+            EX_MEM_instruction <= ID_EX_instruction;
+            EX_MEM_next_pc <= 0; // TODO next_pc logic
+            EX_MEM_curr_pc <= ID_EX_curr_pc;
+            EX_MEM_rs1_raddr <= ID_EX_rs1_raddr;
+            EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
+            EX_MEM_rs1_data <= ID_EX_rs1_data;
+            EX_MEM_c_halted <= ID_EX_c_halted;
         end
     end
 
@@ -443,31 +535,50 @@ module hart #(
     //MEM/WB pipeline register logic
     always @(posedge i_clk) begin
         if (i_rst) begin
-            {MEM_WB_valid, MEM_WB_mem_out, MEM_WB_imm, MEM_WB_next_pc, MEM_WB_alu_out, MEM_WB_write_reg, MEM_WB_c_write_sel, MEM_WB_c_reg_write} <= 0;
+            {MEM_WB_mem_out,
+                MEM_WB_imm,
+                MEM_WB_pc_plus4,
+                MEM_WB_alu_out,
+                MEM_WB_write_reg,
+                MEM_WB_c_write_sel,
+                MEM_WB_c_reg_write,
+                // FOR TB
+                MEM_WB_valid,
+                MEM_WB_instruction,
+                MEM_WB_next_pc,
+                MEM_WB_curr_pc,
+                MEM_WB_rs1_raddr,
+                MEM_WB_rs2_raddr,
+                MEM_WB_rs1_data,
+                MEM_WB_rs2_data,
+                MEM_WB_c_halted} <= 0;
         end else begin
             MEM_WB_mem_out <= o_dmem_wdata;
             MEM_WB_imm <= EX_MEM_imm;
-            MEM_WB_next_pc <= EX_MEM_next_pc;
+            MEM_WB_pc_plus4 <= EX_MEM_pc_plus4;
             MEM_WB_alu_out <= EX_MEM_alu_out;
             MEM_WB_write_reg <= EX_MEM_write_reg;
             MEM_WB_c_write_sel <= EX_MEM_c_write_sel;
             MEM_WB_c_reg_write <= EX_MEM_c_reg_write;
+            // FOR TB
             MEM_WB_valid <= EX_MEM_valid;
+            MEM_WB_instruction <= EX_MEM_instruction;
+            MEM_WB_next_pc <= EX_MEM_next_pc;
+            MEM_WB_curr_pc <= EX_MEM_curr_pc;
+            MEM_WB_rs1_raddr <= EX_MEM_rs1_raddr;
+            MEM_WB_rs2_raddr <= EX_MEM_rs2_raddr;
+            MEM_WB_rs1_data <= EX_MEM_rs1_data;
+            MEM_WB_rs2_data <= EX_MEM_rs2_data;
+            MEM_WB_c_halted <= EX_MEM_c_halted;
         end
     end
 
     //writeback stage - TODO: move to own module
-    assign reg_write_data = (MEM_WB_c_write_sel == 0 ? MEM_WB_next_pc : 
+    assign reg_write_data = (MEM_WB_c_write_sel == 0 ? MEM_WB_pc_plus4 : 
                             MEM_WB_c_write_sel == 1 ? dmem_rdata_aligned : 
                             MEM_WB_c_write_sel == 3 ? MEM_WB_imm:
                             MEM_WB_alu_out);
     
-    assign o_retire_dmem_addr = EX_MEM_alu_out;
-    assign o_retire_dmem_ren = EX_MEM_c_mem_read;
-    assign o_retire_dmem_wen = EX_MEM_c_mem_write;
-    assign o_retire_dmem_mask = o_dmem_mask;
-    assign o_retire_dmem_wdata = EX_MEM_rs2_data;
-    assign o_retire_dmem_rdata = dmem_rdata_aligned;
     //stalling conditions:
     // RAW hazards,
     //    - Check for RAW hazards 
