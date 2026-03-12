@@ -9,6 +9,7 @@ module fetch (
     input wire i_pc_mod,
     input wire i_is_jalr,
     input wire i_halted,
+    input wire i_stall,
     output wire [31:0] o_PC,
     output wire [31:0] o_pc_plus4,
     output wire [31:0] o_next_pc,
@@ -25,7 +26,7 @@ module fetch (
     assign o_pc_plus4 = ProgramCounter + 4;
 
     // cascaded pc muxes
-    assign o_next_pc = i_halted ? ProgramCounter :
+    assign o_next_pc = (i_halted | i_stall) ? ProgramCounter :
         i_is_jalr ? i_jalr_target_addr :
         i_pc_mod ? i_branch_target_addr :
         o_pc_plus4;

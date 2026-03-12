@@ -2,7 +2,6 @@
 
 module execute (
     input wire clk,
-    input wire rst,
     input wire [31:0] read_data_1,
     input wire [31:0] read_data_2,
     input wire [31:0] PC,

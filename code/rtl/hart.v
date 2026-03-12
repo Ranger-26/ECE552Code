@@ -195,7 +195,7 @@ module hart #(
     reg [31:0] IF_ID_curr_pc;
     reg [31:0] IF_ID_pc_plus4;
     reg [31:0] IF_ID_instruction;
-    wire [5:0] IF_ID_format;
+    wire [5:0] format;
     wire [4:0] IF_ID_rs1 = IF_ID_instruction[19:15];
     wire [4:0] IF_ID_rs2 = IF_ID_instruction[24:20];
     wire [4:0] IF_ID_rd = IF_ID_instruction[11:7];
@@ -224,6 +224,7 @@ module hart #(
     reg ID_EX_c_sub;
     reg ID_EX_c_arith;
     reg ID_EX_c_unsigned;
+    reg [5:0] ID_EX_format;
     // FOR TB ONLY
     reg ID_EX_valid;
     reg [31:0] ID_EX_instruction;
@@ -276,6 +277,11 @@ module hart #(
     // EFFECTIVE HALT
     wire effective_halted = c_halted | ID_EX_c_halted;
     
+    // pipeline reg resets
+    wire rst_IF_ID = i_rst | effective_halted | flush_IF_ID;
+
+    wire stall_pc;
+
     // retires
     assign o_retire_valid = MEM_WB_valid;
     assign o_retire_inst = MEM_WB_instruction;
@@ -301,7 +307,6 @@ module hart #(
     assign o_dmem_addr = {EX_MEM_alu_out[31:2], 2'b00}; // align to word boundary
     assign o_dmem_wen = EX_MEM_c_mem_write;
     assign o_dmem_ren = EX_MEM_c_mem_read;
-
 
     assign branch_target_addr = ID_EX_curr_pc + ID_EX_imm;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
@@ -330,6 +335,18 @@ module hart #(
     );
 
 
+    hazard_detector hazard_detector_state(
+        .IF_ID_rs1(IF_ID_rs1),
+        .IF_ID_rs2(IF_ID_rs2),
+        .ID_format(format),
+        .EX_format(ID_EX_format),
+        .ID_EX_write_reg(ID_EX_write_reg),
+        .EX_MEM_write_reg(EX_MEM_write_reg),
+        .c_is_jalr(c_is_jalr),
+        .ID_EX_c_is_jalr(ID_EX_c_is_jalr),
+        .stall_pc(stall_pc),
+        .flush_IF_ID(flush_IF_ID)
+    );
 
     
     //fetch unit
@@ -340,17 +357,18 @@ module hart #(
         .i_instr_op(i_imem_rdata[6:0]),
         .i_branch_target_addr(branch_target_addr),
         .i_jalr_target_addr(jalr_target_addr),
-        .i_is_jalr(c_is_jalr),
+        .i_is_jalr(ID_EX_c_is_jalr),
         .i_halted(effective_halted),
+        .i_stall(stall_pc),
         .o_PC(PC),
         .o_next_pc(next_pc),
         .o_pc_plus4(pc_plus4),
-        .o_itype(IF_ID_format)
+        .o_itype(format)
     );
 
     //pipeline register logic for IF/ID
     always @(posedge i_clk) begin
-        if (i_rst | effective_halted) begin
+        if (rst_IF_ID) begin
             {IF_ID_curr_pc,
                 IF_ID_instruction,
                 IF_ID_pc_plus4,
@@ -455,7 +473,6 @@ module hart #(
     //execute stage
     execute execute_state(
         .clk(i_clk),
-        .rst(i_rst),
         .read_data_1(ID_EX_rs1_data),
         .read_data_2(ID_EX_rs2_data),
         .PC(ID_EX_curr_pc),
