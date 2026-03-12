@@ -28,13 +28,12 @@ always @(posedge i_clk) begin
         ProgramCounter <= 32'b0;
     end else begin
         ProgramCounter <= i_halted ? ProgramCounter : (i_is_jal_r ? i_jalr_target_addr : (i_pcmod ? i_branch_target_addr : ProgramCounter + 4));
-        firstCycle <= 0;
     end
 end
 
 assign o_PC = ProgramCounter;
 // assign o_pc_plus4 = ProgramCounter + 4;
-assign o_nxt_pc = (i_halted ? ProgramCounter : (i_is_jal_r ? i_jalr_target_addr : (i_pcmod ? i_branch_target_addr : ProgramCounter + 4)));
+assign o_nxt_pc =  (i_halted ? ProgramCounter : (i_is_jal_r ? i_jalr_target_addr : (i_pcmod ? i_branch_target_addr : ProgramCounter + 4)));
 
 endmodule
 
