@@ -252,7 +252,7 @@ module hart #(
     assign o_retire_valid = MEM_WB_valid;
     assign o_retire_inst = IF_ID_instruction;
     assign o_imem_raddr = PC;
-    assign o_retire_pc = PC;
+    assign o_retire_pc = 0;
     assign o_retire_rs1_raddr = rs1;
     assign o_retire_rs2_raddr = rs2;
     assign o_retire_rd_waddr = c_reg_write ? rd : 5'd0; // if not writing to a register, set to 0
