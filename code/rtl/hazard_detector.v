@@ -14,7 +14,7 @@ module hazard_detector (
   input wire ID_EX_c_is_jalr,
   output wire stall_pc,
   output wire flush_IF_ID,
-  output wire flush_IF_ID
+  output wire flush_ID_EX
 );
   localparam R_TYPE = 6'b000001;
   localparam B_TYPE = 6'b001000;
@@ -28,7 +28,7 @@ module hazard_detector (
 
   assign flush_IF_ID = ID_control_flow; // stall fetch -> nop into decode (IF/ID reg)
   assign flush_ID_EX = adjacent_hazard | separated_hazard; // stall decode -> nop into execute (ID/EX reg)
-  assign stall_pc = flush_IF_ID;
+  assign stall_pc = flush_IF_ID | flush_ID_EX;
 endmodule
 
 `default_nettype wire
