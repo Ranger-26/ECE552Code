@@ -323,7 +323,7 @@ module hart #(
         .c_write_sel(c_write_sel),
         .c_alu_op(c_alu_op),
         .c_use_imm(c_use_imm),
-        .c_pc_mod(c_pc_mod)
+        .c_pc_mod(c_pc_mod),
         .c_i_sub(c_i_sub),
         .c_i_arith(c_i_arith),
         .c_i_unsigned(c_i_unsigned)
@@ -340,7 +340,7 @@ module hart #(
         .i_instr_op(i_imem_rdata[6:0]),
         .i_branch_target_addr(branch_target_addr),
         .i_jalr_target_addr(jalr_target_addr),
-        .i_is_jal_r(c_is_jal_r),
+        .i_is_jal_r(c_is_jalr),
         .i_halted(effective_halted),
         .o_PC(PC),
         .o_next_pc(next_pc),

@@ -26,7 +26,7 @@ module fetch (
 
     // cascaded pc muxes
     assign o_next_pc = i_halted ? ProgramCounter :
-        i_is_jal_r ? i_jalr_target_addr :
+        i_is_jalr ? i_jalr_target_addr :
         i_pc_mod ? i_branch_target_addr :
         o_pc_plus4;
 
