@@ -527,7 +527,7 @@ module hart #(
             // FOR TB
             EX_MEM_valid <= ID_EX_valid;
             EX_MEM_instruction <= ID_EX_instruction;
-            EX_MEM_next_pc <= (EX_MEM_c_is_jalr | c_pc_mod) ? IF_ID_next_pc : IF_ID_pc_plus4;
+            EX_MEM_next_pc <= (ID_EX_c_is_jalr | c_pc_mod) ? next_pc : IF_ID_pc_plus4;
             EX_MEM_curr_pc <= ID_EX_curr_pc;
             EX_MEM_rs1_raddr <= ID_EX_rs1_raddr;
             EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
