@@ -510,8 +510,9 @@ module hart #(
         .forward_B(forward_B)
     );
 
-    assign EX_TO_EX_data = ID_EX_opcode == 7'b0110111 ? EX_MEM_imm : // LUI
-        ID_EX_opcode == 7'b0010111 ? EX_MEM_pc_plus4 : // AUIPC
+    wire [6:0] EX_MEM_opcode = EX_MEM_instruction[6:0]; // opcode alias
+    assign EX_TO_EX_data = EX_MEM_opcode == 7'b0110111 ? EX_MEM_imm : // LUI
+        EX_MEM_opcode == 7'b0010111 ? EX_MEM_pc_plus4 : // AUIPC
         EX_MEM_alu_out; // otherwise, only forward alu result
 
     //execute stage
