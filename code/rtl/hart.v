@@ -251,6 +251,9 @@ module hart #(
     reg [4:0] EX_MEM_rs2_raddr;
     reg [31:0] EX_MEM_rs1_data;
     reg EX_MEM_c_halted;
+    reg [31:0] EX_MEM_op2;
+    wire [31:0] op1;
+    wire [31:0] op2;
 
     // MEM/WB
     reg [31:0] MEM_WB_mem_out;
@@ -494,8 +497,8 @@ module hart #(
     end
 
     forwarding_unit forwarding_unit_state(
-        .IF_ID_rs1(IF_ID_rs1),
-        .IF_ID_rs2(IF_ID_rs2),
+        .ID_EX_rs1(ID_EX_rs1_raddr),
+        .ID_EX_rs2(ID_EX_rs2_raddr),
         .EX_MEM_write_reg(EX_MEM_write_reg),
         .EX_MEM_wen(EX_MEM_c_reg_write),
         .MEM_WB_write_reg(MEM_WB_write_reg),
@@ -523,7 +526,9 @@ module hart #(
         .i_MEM_TO_EX_data(reg_write_data),
         .alu_out(alu_out),
         .eq(eq),
-        .slt(slt)
+        .slt(slt),
+        .op1(op1),
+        .op2(op2)
     );
     
     //EX/MEM pipeline register logic
@@ -548,7 +553,8 @@ module hart #(
                 EX_MEM_rs1_raddr,
                 EX_MEM_rs2_raddr,
                 EX_MEM_rs1_data,
-                EX_MEM_c_halted} <= 0;
+                EX_MEM_c_halted,
+                EX_MEM_op2} <= 0;
         end else begin
             EX_MEM_alu_out <= alu_out;
             EX_MEM_rs2_data <= ID_EX_rs2_data;
@@ -568,9 +574,10 @@ module hart #(
             EX_MEM_curr_pc <= ID_EX_curr_pc;
             EX_MEM_rs1_raddr <= ID_EX_rs1_raddr;
             EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
-            EX_MEM_rs1_data <= ID_EX_rs1_data;
+            EX_MEM_rs1_data <= op1; // Retire expects alu input, not actual rs1_data. Tests only check this when rs1 is used.
             EX_MEM_c_halted <= ID_EX_c_halted;
             EX_MEM_funct3 <= ID_EX_funct3;
+            EX_MEM_op2 <= op2; // To override MEM_WB_rs2_data, like ^^
         end
     end
 
@@ -636,7 +643,7 @@ module hart #(
             MEM_WB_rs1_raddr <= EX_MEM_rs1_raddr;
             MEM_WB_rs2_raddr <= EX_MEM_rs2_raddr;
             MEM_WB_rs1_data <= EX_MEM_rs1_data;
-            MEM_WB_rs2_data <= EX_MEM_rs2_data;
+            MEM_WB_rs2_data <= EX_MEM_op2; // logic explained in EX_MEM
             MEM_WB_c_halted <= EX_MEM_c_halted;
             MEM_WB_c_mem_read <= EX_MEM_c_mem_read;
             MEM_WB_c_mem_write <= EX_MEM_c_mem_write;

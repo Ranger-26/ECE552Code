@@ -28,20 +28,21 @@ module hazard_detector (
   localparam I_TYPE = 6'b000010;
 
 
+  wire Branch_taken = (ID_EX_format == B_TYPE) &
+    (ID_EX_funct3[0] ^ (ID_EX_funct3[2] ? i_o_slt : i_o_eq)); // same convenient logic as control unit for branch conditions
+
   //detect load to use stalls and branch/jump stalls(need to remove stalls that will be fixed by forwarding)
 
   //input the alu output signals to the control unit, pipeline the funct3 and the instruction type,
   //then match the alu output signals to the funct3 condition and then stall and flush based on that
 
   wire ID_control_flow = (IF_ID_format == J_TYPE) | (c_is_jalr); // if jalr, then we know for sure that it's a control flow instruction, so we can use the control signal directly instead of checking the instruction type
-  wire EX_control_flow = (ID_EX_format == J_TYPE) | (ID_EX_c_is_jalr) | (ID_EX_format == B_TYPE); // same for EX stage
+  wire EX_control_flow = (ID_EX_format == J_TYPE) | (ID_EX_c_is_jalr) | (ID_EX_format == B_TYPE & Branch_taken); // same for EX stage
   wire load_to_use_stall = (ID_EX_format == I_TYPE) & (ID_EX_mem_read) //check if instruction in execute is a load
                           & (ID_EX_write_reg == IF_ID_rs1 || ID_EX_write_reg == IF_ID_rs2)
                           & (ID_EX_write_reg != 0);
   //TODO: implement check for load to use stall
   
-  wire Branch_taken = (ID_EX_format == B_TYPE) &
-    (ID_EX_funct3[0] ^ (ID_EX_funct3[2] ? i_o_slt : i_o_eq)); // same convenient logic as control unit for branch conditions
 
 
   assign stall_IF = (ID_control_flow | EX_control_flow) & (~stall_ID | Branch_taken); // can't nop decode for a decode stall

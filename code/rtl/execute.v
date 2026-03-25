@@ -18,25 +18,28 @@ module execute (
     input wire [31:0] i_MEM_TO_EX_data,
     output wire [31:0] alu_out,
     output wire eq,
-    output wire slt
+    output wire slt,
+    // FOR RETIRE
+    output wire [31:0] op1,
+    output wire [31:0] op2
 );
     localparam EX_TO_EX = 2'b01;
     localparam MEM_TO_EX = 2'b10;
 
-    wire forwardless_op1 = use_pc_reg ? PC : read_data_1;
-    wire forwardless_op2 = use_imm ? imm_sext : read_data_2;
+    wire [31:0] forwardless_op1 = use_pc_reg ? PC : read_data_1;
+    wire [31:0] forwardless_op2 = use_imm ? imm_sext : read_data_2;
 
-    wire op1 = (forward_A == EX_TO_EX) ? i_EX_TO_EX_data :
+    assign op1 = (forward_A == EX_TO_EX) ? i_EX_TO_EX_data :
         (forward_A == MEM_TO_EX) ? i_MEM_TO_EX_data :
         forwardless_op1;
 
-    wire op2 = (forward_B == EX_TO_EX) ? i_EX_TO_EX_data :
+    assign op2 = (forward_B == EX_TO_EX) ? i_EX_TO_EX_data :
         (forward_B == MEM_TO_EX) ? i_MEM_TO_EX_data :
         forwardless_op2;
 
     alu alu_main (
-        .i_op1(use_pc_reg ? PC : read_data_1),
-        .i_op2(use_imm ? imm_sext : read_data_2),
+        .i_op1(op1),
+        .i_op2(op2),
         .i_opsel(alu_op),
         .i_sub(i_sub),
         .i_arith(i_arith),
