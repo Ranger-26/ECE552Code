@@ -9,7 +9,7 @@ module forwarding_unit (
   input wire [4:0] MEM_WB_write_reg,
   input wire MEM_WB_wen,
 
-  output wire [2:0] forward_A,
+  output wire [1:0] forward_A,
   output wire [2:0] forward_B
 );
     //For ex to ex forwarding, we need id_ex_rs1, id_ex_rs2, and ex_mem_write_reg to do out comparisons, also need to check if ex_mem_wen == 1 and that registers arent 0
