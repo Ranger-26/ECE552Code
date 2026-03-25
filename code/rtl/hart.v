@@ -235,6 +235,7 @@ module hart #(
     reg [31:0] EX_MEM_imm;
     reg [31:0] EX_MEM_pc_plus4;
     reg [4:0] EX_MEM_write_reg;
+    reg [2:0] EX_MEM_funct3;
     reg EX_MEM_c_unsigned;
     reg EX_MEM_c_mem_write;
     reg EX_MEM_c_mem_read;
@@ -353,9 +354,13 @@ module hart #(
         .EX_MEM_write_reg(EX_MEM_write_reg),
         .c_is_jalr(c_is_jalr),
         .ID_EX_c_is_jalr(ID_EX_c_is_jalr),
+        .i_o_eq(eq),
+        .i_o_slt(slt),
+        .ID_EX_funct3(ID_EX_funct3),
         .stall_pc(stall_pc),
         .stall_IF(stall_IF),
-        .stall_ID(stall_ID)
+        .stall_ID(stall_ID),
+        .EX_MEM_c_unsigned(EX_MEM_c_unsigned)
     );
 
     
@@ -545,6 +550,7 @@ module hart #(
             EX_MEM_rs2_raddr <= ID_EX_rs2_raddr;
             EX_MEM_rs1_data <= ID_EX_rs1_data;
             EX_MEM_c_halted <= ID_EX_c_halted;
+            EX_MEM_funct3 <= ID_EX_funct3;
         end
     end
 
