@@ -290,6 +290,10 @@ module hart #(
     wire rst_IF_ID = i_rst | effective_halted | stall_IF; // stall fetch -> nop into decode (IF/ID reg)
     wire rst_ID_EX = i_rst | stall_ID; // stall decode -> nop into execute (ID/EX reg)
 
+    // Forwarding mux signals
+    wire [1:0] forward_A;
+    wire [1:0] forward_B;
+
     // retires
     assign o_retire_valid = MEM_WB_valid;
     assign o_retire_inst = MEM_WB_instruction;
@@ -489,6 +493,17 @@ module hart #(
         end
     end
 
+    forwarding_unit forwarding_unit_state(
+        .IF_ID_rs1(IF_ID_rs1),
+        .IF_ID_rs2(IF_ID_rs2),
+        .EX_MEM_write_reg(EX_MEM_write_reg),
+        .EX_MEM_wen(EX_MEM_c_reg_write),
+        .MEM_WB_write_reg(MEM_WB_write_reg),
+        .MEM_WB_wen(MEM_WB_c_reg_write),
+        .forward_A(forward_A),
+        .forward_B(forward_B)
+    );
+
     //execute stage
     execute execute_state(
         .clk(i_clk),
@@ -502,6 +517,10 @@ module hart #(
         .i_sub(ID_EX_c_sub),
         .i_arith(ID_EX_c_arith),
         .i_unsigned(ID_EX_c_unsigned),
+        .forward_A(forward_A),
+        .forward_B(forward_B),
+        .i_EX_TO_EX_data(EX_MEM_alu_out),
+        .i_MEM_TO_EX_data(reg_write_data),
         .alu_out(alu_out),
         .eq(eq),
         .slt(slt)
