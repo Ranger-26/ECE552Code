@@ -39,7 +39,7 @@ module hazard_detector (
   wire ID_control_flow = (IF_ID_format == J_TYPE) | (c_is_jalr); // if jalr, then we know for sure that it's a control flow instruction, so we can use the control signal directly instead of checking the instruction type
   wire EX_control_flow = (ID_EX_format == J_TYPE) | (ID_EX_c_is_jalr) | (ID_EX_format == B_TYPE & Branch_taken); // same for EX stage
   wire load_to_use_stall = (ID_EX_format == I_TYPE) & (ID_EX_mem_read) //check if instruction in execute is a load
-                          & (ID_EX_write_reg == IF_ID_rs1 || ID_EX_write_reg == IF_ID_rs2)
+                          & ((ID_EX_write_reg == IF_ID_rs1) | (ID_EX_write_reg == IF_ID_rs2))
                           & (ID_EX_write_reg != 0);
   //TODO: implement check for load to use stall
   
