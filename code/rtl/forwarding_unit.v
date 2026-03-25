@@ -1,7 +1,7 @@
 module forwarding_unit (
   //ex to ex forwarding
-  input wire [4:0] IF_ID_rs1,
-  input wire [4:0] IF_ID_rs2,
+  input wire [4:0] ID_EX_rs1,
+  input wire [4:0] ID_EX_rs2,
   input wire [4:0] EX_MEM_write_reg,
   input wire EX_MEM_wen,
   
