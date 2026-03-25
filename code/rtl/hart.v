@@ -146,6 +146,8 @@ module hart #(
     wire eq;
     wire slt;
     wire [31:0] alu_out;
+    // Other EX signals
+    wire [31:0] EX_TO_EX_data;
 
     //Control Unit Signals
     wire c_halted; 
@@ -508,6 +510,10 @@ module hart #(
         .forward_B(forward_B)
     );
 
+    assign EX_TO_EX_data = ID_EX_opcode == 7'b0110111 ? EX_MEM_imm : // LUI
+        ID_EX_opcode == 7'b0010111 ? EX_MEM_pc_plus4 : // AUIPC
+        EX_MEM_alu_out; // otherwise, only forward alu result
+
     //execute stage
     execute execute_state(
         .clk(i_clk),
@@ -523,7 +529,7 @@ module hart #(
         .i_unsigned(ID_EX_c_unsigned),
         .forward_A(forward_A),
         .forward_B(forward_B),
-        .i_EX_TO_EX_data(EX_MEM_alu_out),
+        .i_EX_TO_EX_data(EX_TO_EX_data),
         .i_MEM_TO_EX_data(reg_write_data),
         .alu_out(alu_out),
         .eq(eq),
