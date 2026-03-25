@@ -503,6 +503,7 @@ module hart #(
         .EX_MEM_wen(EX_MEM_c_reg_write),
         .MEM_WB_write_reg(MEM_WB_write_reg),
         .MEM_WB_wen(MEM_WB_c_reg_write),
+        .format(ID_EX_format),
         .forward_A(forward_A),
         .forward_B(forward_B)
     );
