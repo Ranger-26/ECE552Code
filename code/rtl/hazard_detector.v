@@ -10,6 +10,7 @@ module hazard_detector (
   input wire [5:0] EX_format,
   input wire [4:0] ID_EX_write_reg,
   input wire [4:0] EX_MEM_write_reg,
+  input wire EX_MEM_mem_read,
   input wire c_is_jalr,
   input wire i_o_eq,
   input wire i_o_slt,
@@ -24,21 +25,27 @@ module hazard_detector (
   localparam B_TYPE = 6'b001000;
   localparam S_TYPE = 6'b000100;
   localparam R_TYPE = 6'b000001;
+  localparam I_TYPE = 6'b000010;
+
+
+  //detect load to use stalls and branch/jump stalls(need to remove stalls that will be fixed by forwarding)
 
   //input the alu output signals to the control unit, pipeline the funct3 and the instruction type,
   //then match the alu output signals to the funct3 condition and then stall and flush based on that
 
   wire ID_control_flow = (ID_format == J_TYPE) | (c_is_jalr); // if jalr, then we know for sure that it's a control flow instruction, so we can use the control signal directly instead of checking the instruction type
   wire EX_control_flow = (EX_format == J_TYPE) | (ID_EX_c_is_jalr) | (EX_format == B_TYPE); // same for EX stage
-
+  wire load_to_use_stall = (EX_format == I_TYPE) & (EX_MEM_mem_read) //check if instruction in execute is a load
+                          & (ID_EX_write_reg == IF_ID_rs1 || ID_EX_write_reg == IF_ID_rs2)
+                          & (ID_EX_write_reg != 0)
+  //TODO: implement check for load to use stall
+  
   wire Branch_taken = (EX_format == B_TYPE) &
     (ID_EX_funct3[0] ^ (ID_EX_funct3[2] ? i_o_slt : i_o_eq)); // same convenient logic as control unit for branch conditions
 
-  wire adjacent_hazard = ((IF_ID_rs1 == ID_EX_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == ID_EX_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE) | (ID_format == S_TYPE)) & (IF_ID_rs2 != 0));
-  wire separated_hazard = ((IF_ID_rs1 == EX_MEM_write_reg) & (IF_ID_rs1 != 0)) | ((IF_ID_rs2 == EX_MEM_write_reg) & ((ID_format == R_TYPE) | (ID_format == B_TYPE) | (ID_format == S_TYPE)) & (IF_ID_rs2 != 0));
 
   assign stall_IF = (ID_control_flow | EX_control_flow) & (~stall_ID | Branch_taken); // can't nop decode for a decode stall
-  assign stall_ID = adjacent_hazard | separated_hazard | Branch_taken;
+  assign stall_ID = load_to_use_stall | Branch_taken;
   assign stall_pc = stall_IF | stall_ID | Branch_taken; // if branch taken, need to stall pc to prevent wrong instruction fetch
 endmodule
 
