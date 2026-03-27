@@ -13,8 +13,12 @@ module forwarding_unit (
 
   output wire [1:0] forward_A,
   output wire [1:0] forward_B
-
 );
+  localparam J_TYPE = 6'b100000;
+  localparam B_TYPE = 6'b001000;
+  localparam S_TYPE = 6'b000100;
+  localparam R_TYPE = 6'b000001;
+  localparam I_TYPE = 6'b000010;
 
   // 00 = No Forwarding, 01 = EX-to-EX Forwarding, 10 = MEM-to-EX Forwarding
 
@@ -24,10 +28,10 @@ module forwarding_unit (
                      2'b00; // No Forwarding
 
   // ALU Input 2
-  wire inst_contains_rs2 = (format == 6'b000001) | (format == 6'b000100) | (format == 6'b001000); // Only do forwarding for rs2 if instruction format is R, S, or B (any format that contains rs2)
+  wire inst_contains_rs2 = (format == R_TYPE) | (format == B_TYPE) | (format == S_TYPE); // Only do forwarding for rs2 if instruction format is R, S, or B (any format that contains rs2)
 
   assign forward_B = (EX_MEM_wen & (EX_MEM_write_reg != 0) & (EX_MEM_write_reg == ID_EX_rs2) & inst_contains_rs2) ? 2'b01 : // EX-to-EX Forwarding
                      (MEM_WB_wen & (MEM_WB_write_reg != 0) & (MEM_WB_write_reg == ID_EX_rs2) & inst_contains_rs2) ? 2'b10 : // MEM-to-EX Forwarding
                      2'b00; // No Forwarding
-                     
+  
 endmodule

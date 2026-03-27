@@ -565,7 +565,9 @@ module hart #(
                 EX_MEM_op2} <= 0;
         end else begin
             EX_MEM_alu_out <= alu_out;
-            EX_MEM_rs2_data <= ID_EX_rs2_data;
+            EX_MEM_rs2_data <= (forward_B == 2'b01) ? EX_TO_EX_data :
+                                (forward_B == 2'b10) ? reg_write_data:
+                                ID_EX_rs2_data;
             EX_MEM_imm <= ID_EX_imm;
             EX_MEM_pc_plus4 <= ID_EX_pc_plus4;
             EX_MEM_write_reg <= ID_EX_write_reg;
@@ -651,7 +653,7 @@ module hart #(
             MEM_WB_rs1_raddr <= EX_MEM_rs1_raddr;
             MEM_WB_rs2_raddr <= EX_MEM_rs2_raddr;
             MEM_WB_rs1_data <= EX_MEM_rs1_data;
-            MEM_WB_rs2_data <= EX_MEM_op2; // logic explained in EX_MEM
+            MEM_WB_rs2_data <= EX_MEM_rs2_data; // logic explained in EX_MEM
             MEM_WB_c_halted <= EX_MEM_c_halted;
             MEM_WB_c_mem_read <= EX_MEM_c_mem_read;
             MEM_WB_c_mem_write <= EX_MEM_c_mem_write;

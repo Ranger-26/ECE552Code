@@ -27,15 +27,14 @@ module execute (
     localparam MEM_TO_EX = 2'b10;
 
     wire [31:0] forwardless_op1 = use_pc_reg ? PC : read_data_1;
-    wire [31:0] forwardless_op2 = use_imm ? imm_sext : read_data_2;
 
     assign op1 = (forward_A == EX_TO_EX) ? i_EX_TO_EX_data :
         (forward_A == MEM_TO_EX) ? i_MEM_TO_EX_data :
         forwardless_op1;
 
-    assign op2 = (forward_B == EX_TO_EX) ? i_EX_TO_EX_data :
+    assign op2 = use_imm ? imm_sext: (forward_B == EX_TO_EX) ? i_EX_TO_EX_data :
         (forward_B == MEM_TO_EX) ? i_MEM_TO_EX_data :
-        forwardless_op2;
+        read_data_2;
 
     alu alu_main (
         .i_op1(op1),
