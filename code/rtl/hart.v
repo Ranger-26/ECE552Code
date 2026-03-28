@@ -671,13 +671,6 @@ module hart #(
                             MEM_WB_c_write_sel == 3 ? MEM_WB_imm:
                             MEM_WB_alu_out);
     
-    //stalling conditions:
-    // RAW hazards,
-    //    - Check for RAW hazards 
-    //          - Load to Use Stall //
-    //          - Load and Store (MEM-MEM) 
-    // Branch, Jump hazards(Branch stall til X, Jump stall till X)
-    // Halt, make sure that we execute all instructions currently in the pipeline 
 endmodule
 
 `default_nettype wire
