@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-module hart_tb #(
+module hart_tb_sta #(
     parameter DEBUG = 0
 ) ();
     // Synchronous active-high reset.
@@ -11,6 +11,9 @@ module hart_tb #(
     wire        dmem_ren, dmem_wen;
     wire [31:0] dmem_wdata;
     wire [ 3:0] dmem_mask;
+    wire o_dmem_done, o_imem_done;
+    wire [31:0] o_dmem_addr, o_imem_addr;
+
 
     // Instruction retire interface.
     wire        valid, trap, halt;
@@ -42,7 +45,9 @@ module hart_tb #(
         .i_mask(4'b1111),
         .i_wdata(32'hxxxxxxxx),
         .o_valid(imem_valid),
-        .o_rdata(imem_rdata)
+        .o_rdata(imem_rdata),
+        .o_wdone(o_imem_done),
+        .o_addr(o_imem_addr)
     );
 
     // Data memory.
@@ -61,7 +66,9 @@ module hart_tb #(
         .i_mask(dmem_mask),
         .i_wdata(dmem_wdata),
         .o_valid(dmem_valid),
-        .o_rdata(dmem_rdata)
+        .o_rdata(dmem_rdata),
+        .o_wdone(o_dmem_done),
+        .o_addr(o_dmem_addr)
     );
 
     hart #(
@@ -111,12 +118,13 @@ module hart_tb #(
         // Open the waveform file.
         if (DEBUG) begin
             $dumpfile("hart.vcd");
-            $dumpvars(0, hart_tb);
+            $dumpvars(0, hart_tb_sta);
         end
 
         // Load the test program into memory at address 0.
         $display("Loading program.");
-        $readmemh("program.mem", imem.mem);
+        $readmemh("tb/program.mem", imem.mem);
+
 
         // Reset the dut.
         $display("Resetting hart.");
@@ -206,5 +214,3 @@ module hart_tb #(
     always
         #5 clk = ~clk;
 endmodule
-
-`default_nettype none

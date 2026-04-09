@@ -159,6 +159,7 @@ module hart #(
     output wire [31:0] o_retire_next_pc
 );
 
+
     //ALU Output signals
     wire eq;
     wire slt;
@@ -388,7 +389,7 @@ module hart #(
         .i_o_slt(slt),
         .i_EX_MEM_c_unsigned(EX_MEM_c_unsigned),
         .i_ID_EX_funct3(ID_EX_funct3),
-        .i_imem_ready(i_imem_ready),
+        .i_imem_valid(i_imem_valid),
         .i_dmem_valid(i_dmem_valid),
         .o_stall_pc(stall_pc),
         .o_stall_IF(stall_IF),
@@ -427,7 +428,7 @@ module hart #(
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
             IF_ID_format <= format;
-            IF_ID_valid <= 1; // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
+            IF_ID_valid <= (i_imem_valid); // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
         end
     end
     

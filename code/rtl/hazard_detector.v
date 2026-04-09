@@ -18,7 +18,7 @@ module hazard_detector (
   input wire [2:0] i_ID_EX_funct3,
   input wire i_ID_EX_c_is_jalr,
   //stall for memory latency
-  input wire i_imem_ready,
+  input wire i_imem_valid,
   input wire i_dmem_valid,
   output wire o_stall_pc,
   output wire o_stall_IF,
@@ -45,11 +45,9 @@ module hazard_detector (
                           & ((i_ID_EX_write_reg == i_IF_ID_rs1) | (i_ID_EX_write_reg == i_IF_ID_rs2 & (i_IF_ID_format == R_TYPE | i_IF_ID_format == S_TYPE | i_IF_ID_format == B_TYPE)))
                           & (i_ID_EX_write_reg != 0)
                           & (i_IF_ID_format != 6'b111111);
-  //TODO: implement check for load to use stall
-  
 
 
-  assign o_stall_IF = ((ID_control_flow | EX_control_flow) & (~o_stall_ID | Branch_taken)) | ~i_imem_ready; // can't nop decode for a decode stall
+  assign o_stall_IF = ((ID_control_flow | EX_control_flow) & (~o_stall_ID | Branch_taken)) | ~i_imem_valid; // can't nop decode for a decode stall
   assign o_stall_ID = load_to_use_stall | Branch_taken;
   assign o_stall_pc = o_stall_IF | o_stall_ID | Branch_taken; // if branch taken, need to stall pc to prevent wrong instruction fetch
   assign o_stall_MEM = 0;//TODO
