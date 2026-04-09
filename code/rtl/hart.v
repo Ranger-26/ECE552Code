@@ -348,7 +348,7 @@ module hart #(
     assign o_imem_raddr = PC;
     assign o_dmem_addr = {EX_MEM_alu_out[31:2], 2'b00}; // align to word boundary
     assign o_dmem_wen = EX_MEM_c_mem_write & i_dmem_ready;
-    assign o_dmem_ren = EX_MEM_c_mem_read & i_dmem_ready;
+    assign o_dmem_ren = EX_MEM_c_mem_read  & i_dmem_ready;
 
     assign branch_target_addr = ID_EX_curr_pc + ID_EX_imm;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
@@ -408,6 +408,7 @@ module hart #(
         .i_ID_EX_funct3(ID_EX_funct3),
         .i_imem_valid(i_imem_valid),
         .i_dmem_valid(i_dmem_valid),
+        .i_dmem_ready(i_dmem_ready),
         .i_EX_MEM_format(EX_MEM_format),
         .i_EX_MEM_c_mem_read(EX_MEM_c_mem_read),
         .o_stall_pc(stall_pc),

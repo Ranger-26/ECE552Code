@@ -23,6 +23,7 @@ module hazard_detector (
   //stall for memory latency
   input wire i_imem_valid,
   input wire i_dmem_valid,
+  input wire i_dmem_ready,
   output wire o_stall_pc,
   output wire o_stall_IF,
   output wire o_stall_ID,
@@ -52,7 +53,7 @@ module hazard_detector (
 
   assign o_stall_IF = ((ID_control_flow | EX_control_flow) & (~o_stall_ID | Branch_taken)) | ~i_imem_valid; // can't nop decode for a decode stall
   assign o_stall_ID = load_to_use_stall | Branch_taken;
-  assign o_stall_MEM = (i_EX_MEM_format == S_TYPE | (i_EX_MEM_format == I_TYPE & i_EX_MEM_c_mem_read)) & ~i_dmem_valid; // check if i_dmem_valid is low and if the EX_MEM instruction is a store or load, if so stall MEM stage until dmem is valid to prevent memory access until data is ready
+  assign o_stall_MEM = (i_EX_MEM_format == S_TYPE & ~i_dmem_ready) | (i_EX_MEM_format == I_TYPE & i_EX_MEM_c_mem_read & ~i_dmem_valid); // check if i_dmem_valid is low and if the EX_MEM instruction is a store or load, if so stall MEM stage until dmem is valid to prevent memory access until data is ready
   assign o_stall_pc = o_stall_IF | o_stall_ID | o_stall_MEM | Branch_taken; // if branch taken, need to stall pc to prevent wrong instruction fetch
 endmodule
 
