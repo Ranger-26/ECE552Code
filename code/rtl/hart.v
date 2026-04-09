@@ -270,6 +270,7 @@ module hart #(
     reg [4:0] EX_MEM_rs1_raddr;
     reg [4:0] EX_MEM_rs2_raddr;
     reg [31:0] EX_MEM_rs1_data;
+    reg [5:0] EX_MEM_format;
     reg EX_MEM_c_halted;
     reg [31:0] EX_MEM_op2;
     wire [31:0] op1;
@@ -318,6 +319,9 @@ module hart #(
     wire [1:0] forward_A;
     wire [1:0] forward_B;
 
+    reg imem_req;
+    reg persist_imem_valid;
+
     // retires
     assign o_retire_valid = MEM_WB_valid;
     assign o_retire_inst = MEM_WB_instruction;
@@ -338,18 +342,31 @@ module hart #(
     assign o_retire_dmem_wdata = MEM_WB_dmem_wdata_aligned;
     assign o_retire_dmem_rdata = MEM_WB_dmem_rdata;
     //new additons for delayed memory
-    assign o_imem_ren = i_imem_ready & ~o_retire_halt;
+    assign o_imem_ren = imem_req & persist_imem_valid & (~c_is_jalr) & (IF_ID_format != 6'b100000); // only fetch new instruction if imem is ready, not halted, and not stalling due to hazard
 
     // memory interfaces
     assign o_imem_raddr = PC;
     assign o_dmem_addr = {EX_MEM_alu_out[31:2], 2'b00}; // align to word boundary
-    assign o_dmem_wen = EX_MEM_c_mem_write;
-    assign o_dmem_ren = EX_MEM_c_mem_read;
+    assign o_dmem_wen = EX_MEM_c_mem_write & i_dmem_ready;
+    assign o_dmem_ren = EX_MEM_c_mem_read & i_dmem_ready;
 
     assign branch_target_addr = ID_EX_curr_pc + ID_EX_imm;
     assign jalr_target_addr = {alu_out[31:1], 1'b0}; // ensure target is even by zeroing LSB
 
+    always @(posedge i_clk) begin
+        if (i_rst) begin
+            imem_req <= 1;
+            persist_imem_valid <= 1;
+        end else begin
+            imem_req <= i_imem_ready & ~o_retire_halt & (IF_ID_format != 6'b100000) & ~c_is_jalr;
 
+            if (i_imem_valid) begin
+                persist_imem_valid <= 1;
+            end else if (o_imem_ren) begin
+                persist_imem_valid <= 0;
+            end
+        end
+    end
 
     //control unit
     control_unit control_unit_state(
@@ -391,6 +408,8 @@ module hart #(
         .i_ID_EX_funct3(ID_EX_funct3),
         .i_imem_valid(i_imem_valid),
         .i_dmem_valid(i_dmem_valid),
+        .i_EX_MEM_format(EX_MEM_format),
+        .i_EX_MEM_c_mem_read(EX_MEM_c_mem_read),
         .o_stall_pc(stall_pc),
         .o_stall_IF(stall_IF),
         .o_stall_ID(stall_ID),
@@ -423,8 +442,8 @@ module hart #(
                 IF_ID_pc_plus4,
                 IF_ID_format,
                 IF_ID_valid} <= 0;
-        end else if (~stall_ID) begin // stall decode -> dont update IF/ID
-            IF_ID_instruction <= i_imem_rdata;
+        end else if (~stall_ID & ~stall_MEM) begin // stall decode -> dont update IF/ID
+            IF_ID_instruction <= i_imem_valid ? i_imem_rdata : 32'h0; // if no valid instruction, write 0 (which will decode as an addi x0, x0, 0 and do nothing)
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
             IF_ID_format <= format;
@@ -491,7 +510,7 @@ module hart #(
                 ID_EX_rs1_raddr,
                 ID_EX_rs2_raddr,
                 ID_EX_c_halted} <= 0;
-        end else begin
+        end else if (~stall_MEM) begin
             ID_EX_format <= IF_ID_format;
             ID_EX_rs1_data <= rs1_data;
             ID_EX_rs2_data <= rs2_data;
@@ -586,7 +605,8 @@ module hart #(
                 EX_MEM_rs2_raddr,
                 EX_MEM_rs1_data,
                 EX_MEM_c_halted,
-                EX_MEM_op2} <= 0;
+                EX_MEM_op2,
+                EX_MEM_format} <= 0;
         end else if (~stall_MEM) begin
             EX_MEM_alu_out <= alu_out;
             EX_MEM_rs2_data <= (forward_B == 2'b01) ? EX_TO_EX_data :
@@ -601,6 +621,7 @@ module hart #(
             EX_MEM_c_reg_write <= ID_EX_c_reg_write;
             EX_MEM_c_write_sel <= ID_EX_c_write_sel;
             EX_MEM_c_mem_size <= ID_EX_c_mem_size;
+            EX_MEM_format <= ID_EX_format;
             // FOR TB
             EX_MEM_valid <= ID_EX_valid;
             EX_MEM_instruction <= ID_EX_instruction;

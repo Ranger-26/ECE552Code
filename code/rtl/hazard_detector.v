@@ -1,3 +1,4 @@
+
 `default_nettype none
 
 // The immediate generator is responsible for decoding the 32-bit sign-extended
@@ -10,6 +11,8 @@ module hazard_detector (
   input wire [5:0] i_ID_EX_format,
   input wire [4:0] i_ID_EX_write_reg,
   input wire [4:0] i_EX_MEM_write_reg,
+  input wire [5:0] i_EX_MEM_format,
+  input wire i_EX_MEM_c_mem_read,
   input wire i_ID_EX_mem_read,
   input wire i_c_is_jalr,
   input wire i_o_eq,
@@ -49,8 +52,8 @@ module hazard_detector (
 
   assign o_stall_IF = ((ID_control_flow | EX_control_flow) & (~o_stall_ID | Branch_taken)) | ~i_imem_valid; // can't nop decode for a decode stall
   assign o_stall_ID = load_to_use_stall | Branch_taken;
-  assign o_stall_pc = o_stall_IF | o_stall_ID | Branch_taken; // if branch taken, need to stall pc to prevent wrong instruction fetch
-  assign o_stall_MEM = 0;//TODO
+  assign o_stall_MEM = (i_EX_MEM_format == S_TYPE | (i_EX_MEM_format == I_TYPE & i_EX_MEM_c_mem_read)) & ~i_dmem_valid; // check if i_dmem_valid is low and if the EX_MEM instruction is a store or load, if so stall MEM stage until dmem is valid to prevent memory access until data is ready
+  assign o_stall_pc = o_stall_IF | o_stall_ID | o_stall_MEM | Branch_taken; // if branch taken, need to stall pc to prevent wrong instruction fetch
 endmodule
 
 `default_nettype wire

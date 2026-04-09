@@ -123,7 +123,7 @@ module hart_tb_sta #(
 
         // Load the test program into memory at address 0.
         $display("Loading program.");
-        $readmemh("tb/program.mem", imem.mem);
+        $readmemh("../tb/program_memtest.mem", imem.mem);
 
 
         // Reset the dut.
