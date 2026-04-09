@@ -342,7 +342,7 @@ module hart #(
     assign o_retire_dmem_wdata = MEM_WB_dmem_wdata_aligned;
     assign o_retire_dmem_rdata = MEM_WB_dmem_rdata;
     //new additons for delayed memory
-    assign o_imem_ren = imem_req & persist_imem_valid & (~c_is_jalr) & (IF_ID_format != 6'b100000); // only fetch new instruction if imem is ready, not halted, and not stalling due to hazard
+    assign o_imem_ren = imem_req & persist_imem_valid & (~c_is_jalr) & (IF_ID_format != 6'b100000 & IF_ID_format != 6'b001000); // only fetch new instruction if imem is ready, not halted, and not stalling due to hazard
 
     // memory interfaces
     assign o_imem_raddr = PC;
@@ -358,7 +358,7 @@ module hart #(
             imem_req <= 1;
             persist_imem_valid <= 1;
         end else begin
-            imem_req <= i_imem_ready & ~o_retire_halt & (IF_ID_format != 6'b100000) & ~c_is_jalr;
+            imem_req <= i_imem_ready & ~o_retire_halt & (IF_ID_format != 6'b100000 & IF_ID_format != 6'b001000) & ~c_is_jalr;
 
             if (i_imem_valid) begin
                 persist_imem_valid <= 1;
