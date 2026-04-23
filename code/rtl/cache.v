@@ -74,10 +74,10 @@ module cache (
   // 32 sets * 2 ways per set * 16 bytes per way = 1K cache
   localparam O = 4;            // 4 bit offset => 16 byte cache line
   localparam S = 5;            // 5 bit set index => 32 sets
-  localparam DEPTH = 2 ** S;   // 32 sets
+  localparam DEPTH = 32;   // 32 sets
   localparam W = 2;            // 2 way set associative, NMRU
-  localparam T = 32 - O - S;   // 23 bit tag
-  localparam D = 2 ** O / 4;   // 16 bytes per line / 4 bytes per word = 4 words per line
+  localparam T = 23;   // 23 bit tag
+  localparam D = 4;   // 16 bytes per line / 4 bytes per word = 4 words per line
 
   // The following memory arrays model the cache structure. As this is
   // an internal implementation detail, you are *free* to modify these
@@ -112,10 +112,143 @@ module cache (
 
   always @(posedge i_clk) begin
     if (i_rst) begin
-      for (integer i = 0; i < DEPTH; i++) begin
-        valid[i] <= 2'b00;
-        lru[i] <= 1'b0;
-      end
+    
+      //shorten this
+      valid[1]  <= 2'b00; lru[1]  <= 1'b0;
+      valid[0]  <= 2'b00; lru[0]  <= 1'b0;
+      valid[2]  <= 2'b00; lru[2]  <= 1'b0;
+      valid[3]  <= 2'b00; lru[3]  <= 1'b0;
+      valid[4]  <= 2'b00; lru[4]  <= 1'b0;
+      valid[5]  <= 2'b00; lru[5]  <= 1'b0;
+      valid[6]  <= 2'b00; lru[6]  <= 1'b0;
+      valid[7]  <= 2'b00; lru[7]  <= 1'b0;
+      valid[8]  <= 2'b00; lru[8]  <= 1'b0;
+      valid[9]  <= 2'b00; lru[9]  <= 1'b0;
+      valid[10] <= 2'b00; lru[10] <= 1'b0;
+      valid[11] <= 2'b00; lru[11] <= 1'b0;
+      valid[12] <= 2'b00; lru[12] <= 1'b0;
+      valid[13] <= 2'b00; lru[13] <= 1'b0;
+      valid[14] <= 2'b00; lru[14] <= 1'b0;
+      valid[15] <= 2'b00; lru[15] <= 1'b0;
+      valid[16] <= 2'b00; lru[16] <= 1'b0;
+      valid[17] <= 2'b00; lru[17] <= 1'b0;
+      valid[18] <= 2'b00; lru[18] <= 1'b0;
+      valid[19] <= 2'b00; lru[19] <= 1'b0;
+      valid[20] <= 2'b00; lru[20] <= 1'b0;
+      valid[21] <= 2'b00; lru[21] <= 1'b0;
+      valid[22] <= 2'b00; lru[22] <= 1'b0;
+      valid[23] <= 2'b00; lru[23] <= 1'b0;
+      valid[24] <= 2'b00; lru[24] <= 1'b0;
+      valid[25] <= 2'b00; lru[25] <= 1'b0;
+      valid[26] <= 2'b00; lru[26] <= 1'b0;
+      valid[27] <= 2'b00; lru[27] <= 1'b0;
+      valid[28] <= 2'b00; lru[28] <= 1'b0;
+      valid[29] <= 2'b00; lru[29] <= 1'b0;
+      valid[30] <= 2'b00; lru[30] <= 1'b0;
+      valid[31] <= 2'b00; lru[31] <= 1'b0;
+
+      
+    // tags
+      tags0[0]  <= 0; tags1[0]  <= 0;
+      tags0[1]  <= 0; tags1[1]  <= 0;
+      tags0[2]  <= 0; tags1[2]  <= 0;
+      tags0[3]  <= 0; tags1[3]  <= 0;
+      tags0[4]  <= 0; tags1[4]  <= 0;
+      tags0[5]  <= 0; tags1[5]  <= 0;
+      tags0[6]  <= 0; tags1[6]  <= 0;
+      tags0[7]  <= 0; tags1[7]  <= 0;
+      tags0[8]  <= 0; tags1[8]  <= 0;
+      tags0[9]  <= 0; tags1[9]  <= 0;
+      tags0[10] <= 0; tags1[10] <= 0;
+      tags0[11] <= 0; tags1[11] <= 0;
+      tags0[12] <= 0; tags1[12] <= 0;
+      tags0[13] <= 0; tags1[13] <= 0;
+      tags0[14] <= 0; tags1[14] <= 0;
+      tags0[15] <= 0; tags1[15] <= 0;
+      tags0[16] <= 0; tags1[16] <= 0;
+      tags0[17] <= 0; tags1[17] <= 0;
+      tags0[18] <= 0; tags1[18] <= 0;
+      tags0[19] <= 0; tags1[19] <= 0;
+      tags0[20] <= 0; tags1[20] <= 0;
+      tags0[21] <= 0; tags1[21] <= 0;
+      tags0[22] <= 0; tags1[22] <= 0;
+      tags0[23] <= 0; tags1[23] <= 0;
+      tags0[24] <= 0; tags1[24] <= 0;
+      tags0[25] <= 0; tags1[25] <= 0;
+      tags0[26] <= 0; tags1[26] <= 0;
+      tags0[27] <= 0; tags1[27] <= 0;
+      tags0[28] <= 0; tags1[28] <= 0;
+      tags0[29] <= 0; tags1[29] <= 0;
+      tags0[30] <= 0; tags1[30] <= 0;
+      tags0[31] <= 0; tags1[31] <= 0;
+  
+      // datas (DEPTH=32, D=4)
+      datas0[0][0]  <= 0; datas0[0][1]  <= 0; datas0[0][2]  <= 0; datas0[0][3]  <= 0;
+      datas1[0][0]  <= 0; datas1[0][1]  <= 0; datas1[0][2]  <= 0; datas1[0][3]  <= 0;
+      datas0[1][0]  <= 0; datas0[1][1]  <= 0; datas0[1][2]  <= 0; datas0[1][3]  <= 0;
+      datas1[1][0]  <= 0; datas1[1][1]  <= 0; datas1[1][2]  <= 0; datas1[1][3]  <= 0;
+      datas0[2][0]  <= 0; datas0[2][1]  <= 0; datas0[2][2]  <= 0; datas0[2][3]  <= 0;
+      datas1[2][0]  <= 0; datas1[2][1]  <= 0; datas1[2][2]  <= 0; datas1[2][3]  <= 0;
+      datas0[3][0]  <= 0; datas0[3][1]  <= 0; datas0[3][2]  <= 0; datas0[3][3]  <= 0;
+      datas1[3][0]  <= 0; datas1[3][1]  <= 0; datas1[3][2]  <= 0; datas1[3][3]  <= 0;
+      datas0[4][0]  <= 0; datas0[4][1]  <= 0; datas0[4][2]  <= 0; datas0[4][3]  <= 0;
+      datas1[4][0]  <= 0; datas1[4][1]  <= 0; datas1[4][2]  <= 0; datas1[4][3]  <= 0;
+      datas0[5][0]  <= 0; datas0[5][1]  <= 0; datas0[5][2]  <= 0; datas0[5][3]  <= 0;
+      datas1[5][0]  <= 0; datas1[5][1]  <= 0; datas1[5][2]  <= 0; datas1[5][3]  <= 0;
+      datas0[6][0]  <= 0; datas0[6][1]  <= 0; datas0[6][2]  <= 0; datas0[6][3]  <= 0;
+      datas1[6][0]  <= 0; datas1[6][1]  <= 0; datas1[6][2]  <= 0; datas1[6][3]  <= 0;
+      datas0[7][0]  <= 0; datas0[7][1]  <= 0; datas0[7][2]  <= 0; datas0[7][3]  <= 0;
+      datas1[7][0]  <= 0; datas1[7][1]  <= 0; datas1[7][2]  <= 0; datas1[7][3]  <= 0;
+      datas0[8][0]  <= 0; datas0[8][1]  <= 0; datas0[8][2]  <= 0; datas0[8][3]  <= 0;
+      datas1[8][0]  <= 0; datas1[8][1]  <= 0; datas1[8][2]  <= 0; datas1[8][3]  <= 0;
+      datas0[9][0]  <= 0; datas0[9][1]  <= 0; datas0[9][2]  <= 0; datas0[9][3]  <= 0;
+      datas1[9][0]  <= 0; datas1[9][1]  <= 0; datas1[9][2]  <= 0; datas1[9][3]  <= 0;
+      datas0[10][0] <= 0; datas0[10][1] <= 0; datas0[10][2] <= 0; datas0[10][3] <= 0;
+      datas1[10][0] <= 0; datas1[10][1] <= 0; datas1[10][2] <= 0; datas1[10][3] <= 0;
+      datas0[11][0] <= 0; datas0[11][1] <= 0; datas0[11][2] <= 0; datas0[11][3] <= 0;
+      datas1[11][0] <= 0; datas1[11][1] <= 0; datas1[11][2] <= 0; datas1[11][3] <= 0;
+      datas0[12][0] <= 0; datas0[12][1] <= 0; datas0[12][2] <= 0; datas0[12][3] <= 0;
+      datas1[12][0] <= 0; datas1[12][1] <= 0; datas1[12][2] <= 0; datas1[12][3] <= 0;
+      datas0[13][0] <= 0; datas0[13][1] <= 0; datas0[13][2] <= 0; datas0[13][3] <= 0;
+      datas1[13][0] <= 0; datas1[13][1] <= 0; datas1[13][2] <= 0; datas1[13][3] <= 0;
+      datas0[14][0] <= 0; datas0[14][1] <= 0; datas0[14][2] <= 0; datas0[14][3] <= 0;
+      datas1[14][0] <= 0; datas1[14][1] <= 0; datas1[14][2] <= 0; datas1[14][3] <= 0;
+      datas0[15][0] <= 0; datas0[15][1] <= 0; datas0[15][2] <= 0; datas0[15][3] <= 0;
+      datas1[15][0] <= 0; datas1[15][1] <= 0; datas1[15][2] <= 0; datas1[15][3] <= 0;
+      datas0[16][0] <= 0; datas0[16][1] <= 0; datas0[16][2] <= 0; datas0[16][3] <= 0;
+      datas1[16][0] <= 0; datas1[16][1] <= 0; datas1[16][2] <= 0; datas1[16][3] <= 0;
+      datas0[17][0] <= 0; datas0[17][1] <= 0; datas0[17][2] <= 0; datas0[17][3] <= 0;
+      datas1[17][0] <= 0; datas1[17][1] <= 0; datas1[17][2] <= 0; datas1[17][3] <= 0;
+      datas0[18][0] <= 0; datas0[18][1] <= 0; datas0[18][2] <= 0; datas0[18][3] <= 0;
+      datas1[18][0] <= 0; datas1[18][1] <= 0; datas1[18][2] <= 0; datas1[18][3] <= 0;
+      datas0[19][0] <= 0; datas0[19][1] <= 0; datas0[19][2] <= 0; datas0[19][3] <= 0;
+      datas1[19][0] <= 0; datas1[19][1] <= 0; datas1[19][2] <= 0; datas1[19][3] <= 0;
+      datas0[20][0] <= 0; datas0[20][1] <= 0; datas0[20][2] <= 0; datas0[20][3] <= 0;
+      datas1[20][0] <= 0; datas1[20][1] <= 0; datas1[20][2] <= 0; datas1[20][3] <= 0;
+      datas0[21][0] <= 0; datas0[21][1] <= 0; datas0[21][2] <= 0; datas0[21][3] <= 0;
+      datas1[21][0] <= 0; datas1[21][1] <= 0; datas1[21][2] <= 0; datas1[21][3] <= 0;
+      datas0[22][0] <= 0; datas0[22][1] <= 0; datas0[22][2] <= 0; datas0[22][3] <= 0;
+      datas1[22][0] <= 0; datas1[22][1] <= 0; datas1[22][2] <= 0; datas1[22][3] <= 0;
+      datas0[23][0] <= 0; datas0[23][1] <= 0; datas0[23][2] <= 0; datas0[23][3] <= 0;
+      datas1[23][0] <= 0; datas1[23][1] <= 0; datas1[23][2] <= 0; datas1[23][3] <= 0;
+      datas0[24][0] <= 0; datas0[24][1] <= 0; datas0[24][2] <= 0; datas0[24][3] <= 0;
+      datas1[24][0] <= 0; datas1[24][1] <= 0; datas1[24][2] <= 0; datas1[24][3] <= 0;
+      datas0[25][0] <= 0; datas0[25][1] <= 0; datas0[25][2] <= 0; datas0[25][3] <= 0;
+      datas1[25][0] <= 0; datas1[25][1] <= 0; datas1[25][2] <= 0; datas1[25][3] <= 0;
+      datas0[26][0] <= 0; datas0[26][1] <= 0; datas0[26][2] <= 0; datas0[26][3] <= 0;
+      datas1[26][0] <= 0; datas1[26][1] <= 0; datas1[26][2] <= 0; datas1[26][3] <= 0;
+      datas0[27][0] <= 0; datas0[27][1] <= 0; datas0[27][2] <= 0; datas0[27][3] <= 0;
+      datas1[27][0] <= 0; datas1[27][1] <= 0; datas1[27][2] <= 0; datas1[27][3] <= 0;
+      datas0[28][0] <= 0; datas0[28][1] <= 0; datas0[28][2] <= 0; datas0[28][3] <= 0;
+      datas1[28][0] <= 0; datas1[28][1] <= 0; datas1[28][2] <= 0; datas1[28][3] <= 0;
+      datas0[29][0] <= 0; datas0[29][1] <= 0; datas0[29][2] <= 0; datas0[29][3] <= 0;
+      datas1[29][0] <= 0; datas1[29][1] <= 0; datas1[29][2] <= 0; datas1[29][3] <= 0;
+      datas0[30][0] <= 0; datas0[30][1] <= 0; datas0[30][2] <= 0; datas0[30][3] <= 0;
+      datas1[30][0] <= 0; datas1[30][1] <= 0; datas1[30][2] <= 0; datas1[30][3] <= 0;
+      datas0[31][0] <= 0; datas0[31][1] <= 0; datas0[31][2] <= 0; datas0[31][3] <= 0;
+      datas1[31][0] <= 0; datas1[31][1] <= 0; datas1[31][2] <= 0; datas1[31][3] <= 0;
+      
+      
       state <= IDLE;
       req_RW <= 1'b0;
       word_cnt <= 3'b000;
@@ -195,7 +328,7 @@ module cache (
       i_req_mask[1] ? i_req_wdata[15:8] : curr_word[15:8],
       i_req_mask[0] ? i_req_wdata[7:0] : curr_word[7:0]};
 
-  assign o_mem_ren = i_mem_ready & (state == ALLOCATE) & (word_cnt < D);
+  assign o_mem_ren = i_mem_ready & (state == ALLOCATE) & (word_cnt < 4); // Using 4 in place of D to suppress warnings
   assign o_mem_wen = i_mem_ready & (((state == WRITEBACK) & req_RW) | (cache_hit & i_req_wen));
   // If accessing mem in ALLOCATE, word_cnt helps iterate over all 4 words in the line
   assign o_mem_addr = {req_tag, req_set, (state == ALLOCATE) ? word_cnt[1:0] : req_word_offset, 2'b00};

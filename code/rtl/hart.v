@@ -344,10 +344,26 @@ module hart #(
     assign o_retire_dmem_wdata = MEM_WB_dmem_wdata_aligned;
     assign o_retire_dmem_rdata = MEM_WB_dmem_rdata;
     //new additons for delayed memory
-    assign o_imem_ren = imem_req & persist_imem_valid & (~c_is_jalr) & (IF_ID_format != 6'b100000 & IF_ID_format != 6'b001000); // only fetch new instruction if imem is ready, not halted, and not stalling due to hazard
+    //assign o_imem_ren = imem_req & persist_imem_valid & (~c_is_jalr) & (IF_ID_format != 6'b100000 & IF_ID_format != 6'b001000); // only fetch new instruction if imem is ready, not halted, and not stalling due to hazard
+
+    // Cache interface
+    wire icache_o_busy;
+    wire [31:0] icache_o_rdata;
+    wire icache_i_req_ren;
+    wire icache_i_req_wen;
+    wire [31:0] icache_i_req_addr;
+    wire [31:0] icache_i_req_wdata;
+    wire [3:0] icache_i_req_mask;
+    reg first_request;
+
+    assign icache_i_req_ren = ~effective_halted & ~stall_MEM; // only fetch new instruction if cache is not busy, imem is ready, not halted, and not stalling due to hazard
+    assign icache_i_req_wen = 0; // hart does not perform instruction writes
+    assign icache_i_req_addr = PC;
+    assign icache_i_req_wdata = 32'b0;
+    assign icache_i_req_mask = 4'b1111;
 
     // memory interfaces
-    assign o_imem_raddr = PC;
+    //assign o_imem_raddr = PC;
     assign o_dmem_addr = {EX_MEM_alu_out[31:2], 2'b00}; // align to word boundary
     assign o_dmem_wen = EX_MEM_c_mem_write & i_dmem_ready;
     assign o_dmem_ren = EX_MEM_c_mem_read  & i_dmem_ready;
@@ -359,7 +375,9 @@ module hart #(
         if (i_rst) begin
             imem_req <= 1;
             persist_imem_valid <= 1;
+            first_request <= 1;
         end else begin
+            first_request <= 0;
             imem_req <= i_imem_ready & ~o_retire_halt & (IF_ID_format != 6'b100000 & IF_ID_format != 6'b001000) & ~c_is_jalr;
 
             if (i_imem_valid) begin
@@ -408,30 +426,96 @@ module hart #(
         .i_o_slt(slt),
         .i_EX_MEM_c_unsigned(EX_MEM_c_unsigned),
         .i_ID_EX_funct3(ID_EX_funct3),
-        .i_imem_valid(i_imem_valid),
+        .i_imem_valid(~icache_o_busy), 
         .i_dmem_valid(i_dmem_valid),
         .i_dmem_ready(i_dmem_ready),
         .i_EX_MEM_format(EX_MEM_format),
         .i_EX_MEM_c_mem_read(EX_MEM_c_mem_read),
-        .o_stall_pc(stall_pc),
+        .o_stall_pc(stall_pc), // stall pc if hazard or cache is busy
         .o_stall_IF(stall_IF),
         .o_stall_ID(stall_ID),
         .o_stall_MEM(stall_MEM),
         .branch_taken(branch_taken)
     );
 
-    
+    cache instruction_cache(
+          // Global clock.
+        .i_clk(i_clk),
+        // Synchronous active-high reset.
+        .i_rst(i_rst),
+        // External memory interface. See hart interface for details. This
+        // interface is nearly identical to the phase 5 memory interface, with the
+        // exception that the byte mask (`o_mem_mask`) has been removed. This is
+        // no longer needed as the cache will only access the memory at word
+        // granularity, and implement masking internally.
+        .i_mem_ready(i_imem_ready),
+        .o_mem_addr(o_imem_raddr),
+        .o_mem_ren(o_imem_ren), // only send read request to memory if cache is requesting and memory is ready
+        .o_mem_wen(), // hart does not perform instruction writes
+        .o_mem_wdata(),
+        .i_mem_rdata(i_imem_rdata),
+        .i_mem_valid(i_imem_valid),
+        // Interface to CPU hart. This is nearly identical to the phase 5 hart memory
+        // interface, but includes a stall signal (`o_busy`), and the input/output
+        // polarities are swapped for obvious reasons.
+        //
+        // The CPU should use this as a stall signal for both instruction fetch
+        // (IF) and memory (MEM) stages, from the instruction or data cache
+        // respectively. If a memory request is made (`i_req_ren` for instruction
+        // cache, or either `i_req_ren` or `i_req_wen` for data cache), this
+        // should be asserted *combinationally* if the request results in a cache
+        // miss.
+        //
+        // In case of a cache miss, the CPU must stall the respective pipeline
+        // stage and deassert ren/wen on subsequent cycles, until the cache
+        // deasserts `o_busy` to indicate it has serviced the cache miss. However,
+        // the CPU must keep the other request lines constant. For example, the
+        // CPU should not change the request address while stalling.
+        .o_busy(icache_o_busy),
+        // 32-bit read/write address to access from the cache. This should be
+        // 32-bit aligned (i.e. the two LSBs should be zero). See `i_req_mask` for
+        // how to perform half-word and byte accesses to unaligned addresses.
+        .i_req_addr(icache_i_req_addr),
+        // When asserted, the cache should perform a read at the aligned address
+        // specified by `i_req_addr` and return the 32-bit word at that address,
+        // either immediately (i.e. combinationally) on a cache hit, or
+        // synchronously on a cache miss. It is illegal to assert this and
+        // `i_dmem_wen` on the same cycle.
+        .i_req_ren(icache_i_req_ren),
+        // When asserted, the cache should perform a write at the aligned address
+        // specified by `i_req_addr` with the 32-bit word provided in
+        // `o_req_wdata` (specified by the mask). This is necessarily synchronous,
+        // but may either happen on the next clock edge (on a cache hit) or after
+        // multiple cycles of latency (cache miss). As the cache is write-through
+        // and write-allocate, writes must be applied to both the cache and
+        // underlying memory.
+        // It is illegal to assert this and `i_dmem_ren` on the same cycle.
+        .i_req_wen(icache_i_req_wen),
+        // The memory interface expects word (32 bit) aligned addresses. However,
+        // WISC-25 supports byte and half-word loads and stores at unaligned and
+        // 16-bit aligned addresses, respectively. To support this, the access
+        // mask specifies which bytes within the 32-bit word are actually read
+        // from or written to memory.
+        .i_req_mask(icache_i_req_mask),
+        // The 32-bit word to write to memory, if the request is a write
+        // (i_req_wen is asserted). Only the bytes corresponding to set bits in
+        // the mask should be written into the cache (and to backing memory).
+        .i_req_wdata(icache_i_req_wdata),
+        // THe 32-bit data word read from memory on a read request.
+        .o_res_rdata(icache_o_rdata)
+    );
+
     //fetch unit
     fetch fetch_stage(
         .i_clk(i_clk),
         .i_rst(i_rst),
         .i_pc_mod(c_pc_mod),
-        .i_instr_op(i_imem_rdata[6:0]),
+        .i_instr_op(icache_o_rdata[6:0]),
         .i_branch_target_addr(branch_target_addr),
         .i_jalr_target_addr(jalr_target_addr),
         .i_is_jalr(ID_EX_c_is_jalr),
         .i_halted(effective_halted),
-        .i_stall(stall_pc),
+        .i_stall(stall_pc | icache_o_busy | stall_MEM), // stall pc if hazard or cache is busy
         .o_PC(PC),
         .o_next_pc(next_pc),
         .o_pc_plus4(pc_plus4),
@@ -447,11 +531,11 @@ module hart #(
                 IF_ID_format,
                 IF_ID_valid} <= 0;
         end else if (~stall_ID & ~stall_MEM) begin // stall decode -> dont update IF/ID
-            IF_ID_instruction <= i_imem_valid ? i_imem_rdata : 32'h0; // if no valid instruction, write 0 (which will decode as an addi x0, x0, 0 and do nothing)
+            IF_ID_instruction <= ~icache_o_busy ? icache_o_rdata : 32'h0;
             IF_ID_pc_plus4 <= pc_plus4;
             IF_ID_curr_pc <= PC;
             IF_ID_format <= format;
-            IF_ID_valid <= (i_imem_valid); // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
+            IF_ID_valid <= (~icache_o_busy); // once we start fetching instructions, we can set valid bit to 1 and keep it there until reset
         end
     end
     
