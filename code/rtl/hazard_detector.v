@@ -27,7 +27,8 @@ module hazard_detector (
   output wire o_stall_pc,
   output wire o_stall_IF,
   output wire o_stall_ID,
-  output wire o_stall_MEM
+  output wire o_stall_MEM,
+  output wire branch_taken
 );
   localparam J_TYPE = 6'b100000;
   localparam B_TYPE = 6'b001000;

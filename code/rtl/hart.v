@@ -319,6 +319,8 @@ module hart #(
     wire [1:0] forward_A;
     wire [1:0] forward_B;
 
+    wire branch_taken;
+
     reg imem_req;
     reg persist_imem_valid;
 
@@ -414,7 +416,8 @@ module hart #(
         .o_stall_pc(stall_pc),
         .o_stall_IF(stall_IF),
         .o_stall_ID(stall_ID),
-        .o_stall_MEM(stall_MEM)
+        .o_stall_MEM(stall_MEM),
+        .branch_taken(branch_taken)
     );
 
     
