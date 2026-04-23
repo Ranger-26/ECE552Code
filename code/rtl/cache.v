@@ -261,7 +261,9 @@ module cache (
 
       case (state)
         IDLE: begin
-          if (cache_hit) begin
+          if (~i_req_wen && ~i_req_ren) begin
+            state <= IDLE; // stay in IDLE if no request
+          end else if (cache_hit) begin
             lru[req_set] <= way0_hit; // if way0 hit, way1 is LRU, else way0 is LRU
 
             if (i_req_wen) begin

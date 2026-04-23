@@ -524,7 +524,7 @@ module hart #(
 
     //pipeline register logic for IF/ID
     always @(posedge i_clk) begin
-        if (rst_IF_ID) begin
+        if (rst_IF_ID & ~stall_MEM) begin
             {IF_ID_curr_pc,
                 IF_ID_instruction,
                 IF_ID_pc_plus4,
