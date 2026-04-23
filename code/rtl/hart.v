@@ -570,7 +570,7 @@ module hart #(
 
     //pipeline register logic for ID/EX
     always @(posedge i_clk) begin
-        if (rst_ID_EX) begin
+        if (rst_ID_EX & ~stall_MEM) begin
             {ID_EX_format,
                 ID_EX_rs1_data,
                 ID_EX_rs2_data,
